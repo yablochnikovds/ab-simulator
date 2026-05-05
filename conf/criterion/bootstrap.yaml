@@ -1,0 +1,6 @@
+# @package criterion
+_target_: absim.criteria.Bootstrap
+name: bootstrap
+alpha: 0.05
+n_resamples: 1000
+method: percentile

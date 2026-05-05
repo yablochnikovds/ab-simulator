@@ -1,0 +1,6 @@
+# @package criterion
+_target_: absim.criteria.CUPAC
+name: cupac
+alpha: 0.05
+n_splits: 5
+seed: 0

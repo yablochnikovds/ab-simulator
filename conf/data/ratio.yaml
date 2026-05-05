@@ -1,0 +1,9 @@
+# @package data
+_target_: absim.generators.RatioGenerator
+name: ratio
+n_per_group: 2000
+base_rate: 0.2
+sessions_mean: 5.0
+noise: 0.1
+relative: true
+n_strata: 4

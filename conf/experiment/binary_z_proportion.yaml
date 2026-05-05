@@ -1,0 +1,27 @@
+# @package _global_
+# Validate the z-test for proportions on a Bernoulli metric.
+defaults:
+  - /data: binary
+  - _self_
+
+experiment:
+  output_dir: outputs
+
+  effects:
+    - { name: none,   value: 0.0,    relative: false }
+    - { name: small,  value: 0.005,  relative: false }
+    - { name: medium, value: 0.01,   relative: false }
+    - { name: large,  value: 0.02,   relative: false }
+
+  criteria:
+    z_proportion:
+      _target_: absim.criteria.ZTestProportions
+      name: z_proportion
+      alpha: 0.05
+    welch:
+      _target_: absim.criteria.WelchTTest
+      name: welch_t
+      alpha: 0.05
+
+simulator:
+  n_sims: 5000

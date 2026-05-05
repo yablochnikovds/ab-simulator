@@ -1,0 +1,4 @@
+# @package criterion
+_target_: absim.criteria.DeltaMethod
+name: delta_method
+alpha: 0.05

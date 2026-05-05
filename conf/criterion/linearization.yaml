@@ -1,0 +1,4 @@
+# @package criterion
+_target_: absim.criteria.Linearization
+name: linearization
+alpha: 0.05

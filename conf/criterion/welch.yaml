@@ -1,0 +1,4 @@
+# @package criterion
+_target_: absim.criteria.WelchTTest
+name: welch_t
+alpha: 0.05

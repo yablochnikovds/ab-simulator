@@ -1,0 +1,4 @@
+# @package criterion
+_target_: absim.criteria.PostStratification
+name: post_stratification
+alpha: 0.05

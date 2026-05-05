@@ -1,0 +1,7 @@
+# @package data
+_target_: absim.generators.BinaryGenerator
+name: binary
+n_per_group: 5000
+p: 0.1
+rho: 0.3
+n_strata: 4

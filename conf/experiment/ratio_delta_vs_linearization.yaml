@@ -1,0 +1,31 @@
+# @package _global_
+# Compare delta-method, Budylin linearization, and naive Welch on a ratio metric.
+defaults:
+  - /data: ratio
+  - _self_
+
+experiment:
+  output_dir: outputs
+
+  effects:
+    - { name: none,   value: 0.0,  relative: true }
+    - { name: small,  value: 0.02, relative: true }
+    - { name: medium, value: 0.05, relative: true }
+    - { name: large,  value: 0.10, relative: true }
+
+  criteria:
+    delta:
+      _target_: absim.criteria.DeltaMethod
+      name: delta_method
+      alpha: 0.05
+    linearization:
+      _target_: absim.criteria.Linearization
+      name: linearization
+      alpha: 0.05
+    welch_naive:
+      _target_: absim.criteria.WelchTTest
+      name: welch_t
+      alpha: 0.05
+
+simulator:
+  n_sims: 5000

@@ -1,0 +1,38 @@
+# @package _global_
+# Bootstrap (percentile + BCa) vs Welch on heavy-tailed lognormal data.
+defaults:
+  - /data: continuous
+  - _self_
+
+experiment:
+  output_dir: outputs
+
+  effects:
+    - { name: none,   value: 0.0,  relative: false }
+    - { name: medium, value: 0.10, relative: false }
+
+  criteria:
+    welch:
+      _target_: absim.criteria.WelchTTest
+      name: welch_t
+      alpha: 0.05
+    bootstrap_pct:
+      _target_: absim.criteria.Bootstrap
+      name: bootstrap
+      alpha: 0.05
+      n_resamples: 1000
+      method: percentile
+    bootstrap_bca:
+      _target_: absim.criteria.Bootstrap
+      name: bootstrap
+      alpha: 0.05
+      n_resamples: 1000
+      method: bca
+
+data:
+  distribution: lognormal
+  n_per_group: 800
+  rho: 0.0
+
+simulator:
+  n_sims: 2000

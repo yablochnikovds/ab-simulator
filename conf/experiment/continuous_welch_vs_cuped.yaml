@@ -1,0 +1,41 @@
+# @package _global_
+# Compare Welch's t-test against CUPED on a Gaussian metric with a strong
+# pre-experiment covariate. CUPED should reduce variance by roughly (1 - rho^2).
+defaults:
+  - /data: continuous
+  - _self_
+
+experiment:
+  output_dir: outputs
+
+  effects:
+    - { name: none,   value: 0.0,  relative: false }
+    - { name: small,  value: 0.05, relative: false }
+    - { name: medium, value: 0.10, relative: false }
+    - { name: large,  value: 0.20, relative: false }
+
+  criteria:
+    welch:
+      _target_: absim.criteria.WelchTTest
+      name: welch_t
+      alpha: 0.05
+    cuped:
+      _target_: absim.criteria.CUPED
+      name: cuped
+      alpha: 0.05
+    cupac:
+      _target_: absim.criteria.CUPAC
+      name: cupac
+      alpha: 0.05
+      n_splits: 5
+      seed: 0
+    post_strat:
+      _target_: absim.criteria.PostStratification
+      name: post_stratification
+      alpha: 0.05
+
+data:
+  rho: 0.6
+
+simulator:
+  n_sims: 5000

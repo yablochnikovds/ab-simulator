@@ -1,0 +1,39 @@
+# @package _global_
+# Paired matched-pair design (e.g. before/after, twin study).
+# The generator emits genuinely paired samples — both arms share within-pair
+# covariates. Welch is conservative here (it ignores the within-pair
+# correlation); PairedStratification is calibrated; CUPED is also calibrated
+# because the covariate is independent of treatment assignment.
+defaults:
+  - /data: continuous
+  - _self_
+
+experiment:
+  output_dir: outputs
+
+  effects:
+    - { name: none,   value: 0.0,  relative: false }
+    - { name: small,  value: 0.05, relative: false }
+    - { name: medium, value: 0.10, relative: false }
+
+  criteria:
+    welch:
+      _target_: absim.criteria.WelchTTest
+      name: welch_t
+      alpha: 0.05
+    paired:
+      _target_: absim.criteria.PairedStratification
+      name: paired_stratification
+      alpha: 0.05
+      paired: true
+    cuped:
+      _target_: absim.criteria.CUPED
+      name: cuped
+      alpha: 0.05
+
+data:
+  paired: true
+  rho: 0.6
+
+simulator:
+  n_sims: 5000

@@ -1,0 +1,9 @@
+# @package data
+_target_: absim.generators.ContinuousGenerator
+name: continuous
+n_per_group: 1000
+mean: 0.0
+sd: 1.0
+rho: 0.5
+distribution: normal
+n_strata: 4

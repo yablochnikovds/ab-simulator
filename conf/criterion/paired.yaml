@@ -1,0 +1,4 @@
+# @package criterion
+_target_: absim.criteria.PairedStratification
+name: paired_stratification
+alpha: 0.05

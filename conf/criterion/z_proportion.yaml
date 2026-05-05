@@ -1,0 +1,4 @@
+# @package criterion
+_target_: absim.criteria.ZTestProportions
+name: z_proportion
+alpha: 0.05

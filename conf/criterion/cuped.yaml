@@ -1,0 +1,4 @@
+# @package criterion
+_target_: absim.criteria.CUPED
+name: cuped
+alpha: 0.05
