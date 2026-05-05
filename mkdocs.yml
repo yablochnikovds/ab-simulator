@@ -1,0 +1,89 @@
+site_name: absim
+site_description: Monte Carlo validator for A/B testing criteria
+site_url: https://yablochnikovds.github.io/ab-simulator/
+repo_url: https://github.com/yablochnikovds/ab-simulator
+repo_name: yablochnikovds/ab-simulator
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - content.code.copy
+    - content.code.annotate
+    - search.suggest
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_source: false
+            show_signature_annotations: true
+            show_root_heading: true
+            members_order: source
+            separate_signature: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - tables
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Tutorial: tutorial.md
+  - Criterion reference:
+    - criteria/index.md
+    - Welch's t-test: criteria/welch.md
+    - z-test for proportions: criteria/z_proportion.md
+    - CUPED: criteria/cuped.md
+    - CUPAC: criteria/cupac.md
+    - Bootstrap: criteria/bootstrap.md
+    - Delta-method: criteria/delta_method.md
+    - Linearization: criteria/linearization.md
+    - Post-stratification: criteria/post_stratification.md
+    - Paired stratification: criteria/paired_stratification.md
+  - Benchmark: benchmark.md
+  - API reference:
+    - api/index.md
+    - Simulator: api/simulator.md
+    - Criteria: api/criteria.md
+    - Generators: api/generators.md
+    - Types: api/types.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
