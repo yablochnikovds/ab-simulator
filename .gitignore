@@ -1,0 +1,66 @@
+# Build / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+wheels/
+
+# Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtualenvs
+.venv/
+venv/
+env/
+.python-version
+
+# uv
+.uv/
+
+# Tooling
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# Hydra outputs / results
+outputs/
+multirun/
+results/
+.benchmark/
+
+# Docs build
+site/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Agent scaffolding (excluded from repo)
+_TASK.md
+_launch.sh
+_tail.sh
+_build.log
+_build.err.log
+_build.pid
+.scratch/
