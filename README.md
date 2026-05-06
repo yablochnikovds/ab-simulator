@@ -5,18 +5,21 @@
 [![python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://pypi.org/project/absim/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **Don't pick an A/B-test criterion blind. Run it on synthetic data first.**
+> **Power-analyze A/B-test criteria on your real production data — not on toy Gaussians.**
 
 You're about to ship an experiment. Should you use a t-test or a bootstrap?
 Will CUPED actually buy you 30% more power, or is the team being optimistic?
 Is your in-house variance-reduction code even calibrated?
 
 `absim` is a **Monte Carlo simulator for A/B-test statistical criteria**.
-You describe what your data looks like — `absim` runs 10 000+ synthetic
-experiments, reports the **false-positive rate** (with a confidence band) and
-the **power** for each criterion, and tells you which one is actually the
-right choice for *your* data shape, *your* sample size, and *your* effect
-size.
+Hand it a NumPy array of historical outcomes from your warehouse — it
+bootstrap-resamples your real distribution, injects a calibrated effect into
+the treatment arm, runs 10 000+ synthetic experiments, and reports the
+**false-positive rate** (with a Wilson confidence band) and the **power**
+for each criterion. The synthetic experiments inherit your data's quirks
+(zero-inflation, heavy tails, multi-modality) — the things parametric
+generators won't reproduce. No more guessing whether "the textbook formula
+applies to *our* metric".
 
 ```text
         Generator                  Criterion                Simulator
@@ -41,7 +44,41 @@ size.
 
 Real situations where `absim` saves you from shipping the wrong test:
 
-### 1. "Will CUPED actually be worth the effort?"
+### 1. "Power-analyze a real metric from our warehouse"
+
+Your team is about to A/B test a feature on per-user revenue. The metric is
+zero-inflated and heavy-tailed; the textbook t-test power formula assumes
+neither. Pull a historical sample, hand it to `EmpiricalGenerator`, and let
+absim simulate the experiment thousands of times on **your actual
+distribution**:
+
+```python
+import numpy as np, pandas as pd
+from absim import EffectSize, Simulator
+from absim.criteria import Bootstrap, WelchTTest
+from absim.generators import EmpiricalGenerator
+
+# Pull real historical revenue (zero-inflated, heavy tail).
+revenue = pd.read_parquet("revenue_last_month.parquet")["revenue"].to_numpy(float)
+
+gen = EmpiricalGenerator(outcomes=revenue, n_per_group=10_000, relative=True)
+
+for crit in (WelchTTest(), Bootstrap(method="bca", n_resamples=1000)):
+    for lift in (0.0, 0.02, 0.05):
+        r = Simulator(gen, crit, n_sims=2000,
+                      effect=EffectSize(f"+{lift:.0%}", lift), seed=0).run()
+        kind = "FPR" if lift == 0 else "Power"
+        print(f"{crit.name:>10s}  lift={lift:+.0%}  {kind}={r.rejection_rate:.3f}")
+```
+
+Read the FPR rows to confirm the criterion is calibrated **on your data**;
+read the Power rows to decide which one is sensitive enough at the lift you
+expect to ship.
+
+See [docs/real_data.md](docs/real_data.md) for the full real-data workflow,
+including in-house code validation and CTR-with-CUPED on warehouse pulls.
+
+### 2. "Will CUPED actually be worth the effort?"
 
 Your team has a pre-experiment metric strongly correlated with the outcome
 (`ρ ≈ 0.8`). Theory says CUPED reduces residual variance by `1 − ρ² = 0.36`
@@ -62,29 +99,41 @@ for crit in (WelchTTest(), CUPED()):
 #    cuped  power = 0.987   ← finds 99% — variance reduction is real
 ```
 
-### 2. "Is my in-house t-test correctly calibrated?"
+### 3. "Is my in-house t-test correctly calibrated?"
 
 Your team rolled a custom Welch / bootstrap implementation in a production
-experiment platform. You want a sanity check: under H₀ (no real effect),
-does it really reject 5% of the time?
+experiment platform. You want a sanity check on **realistic data**: under
+H₀ (no real effect), does it reject 5% of the time?
 
 ```python
+from dataclasses import dataclass
 from absim import Simulator
-from absim.criteria import Bootstrap         # or any Criterion implementation
-from absim.generators import ContinuousGenerator
+from absim.criteria.base import register
+from absim.types import TestResult
+from absim.generators import EmpiricalGenerator
+import experiments_platform as platform   # your in-house module
 
-sim = Simulator(generator=ContinuousGenerator(n_per_group=2000),
-                criterion=Bootstrap(n_resamples=2000), n_sims=10_000, seed=0)
-r = sim.run()
-# r.fpr            ≈ 0.05   →  calibrated
-# (r.binomial_ci_low, r.binomial_ci_high) → Wilson 95% CI for the FPR estimate
+@register("inhouse")
+@dataclass(frozen=True, slots=True)
+class InHouseTest:
+    alpha: float = 0.05
+    name: str = "inhouse"
+    def test(self, treatment, control, **aux) -> TestResult:
+        r = platform.welch_test(treatment, control, alpha=self.alpha)
+        return TestResult(p_value=r.p_value, statistic=r.statistic,
+                          effect=r.point_estimate, std_error=r.std_error,
+                          ci_low=r.ci[0], ci_high=r.ci[1],
+                          rejected=r.p_value < self.alpha)
+
+# Run the audit on REAL data, not on a Gaussian toy.
+gen = EmpiricalGenerator(outcomes=revenue, n_per_group=5000)
+report = Simulator(gen, InHouseTest(), n_sims=10_000, seed=0).run()
+print(f"FPR={report.fpr:.4f}  Wilson 95% CI=[{report.binomial_ci_low:.4f}, "
+      f"{report.binomial_ci_high:.4f}]")
+# If 0.05 ∉ CI, your in-house code is mis-calibrated → bug to fix.
 ```
 
-To test *your* code, write a class that implements
-`Criterion.test(treatment, control, **aux) -> TestResult` — that's the only
-extension point.
-
-### 3. "Delta-method, linearization, or bootstrap for my CTR?"
+### 4. "Delta-method, linearization, or bootstrap for my CTR?"
 
 Ratio metrics (clicks/sessions, ARPU, conversion-rate-per-user) are notorious
 because numerator and denominator have different granularity. Three
@@ -103,7 +152,7 @@ for crit in (DeltaMethod(), Linearization(), Bootstrap()):
     print(f"{crit.name:>16s}  FPR = {fpr:.4f}")
 ```
 
-### 4. "My revenue metric is heavy-tailed — is t-test still safe?"
+### 5. "My revenue metric is heavy-tailed — is t-test still safe?"
 
 You've got revenue per user (lognormal-ish). The textbook says "t-test is
 robust" but you're not sure for *your* skewness. Compare on a realistic
@@ -116,7 +165,7 @@ for crit in (WelchTTest(), Bootstrap(method="bca")):
     print(f"{crit.name:>10s}  FPR = {fpr:.4f}")
 ```
 
-### 5. "Does post-stratification actually buy me power?"
+### 6. "Does post-stratification actually buy me power?"
 
 You're stratifying by platform / device / cohort. Theory says variance can
 only go down. But by how much *on your data*?
@@ -133,17 +182,18 @@ print(sim.run().power)   # compare against WelchTTest() on the same data
 
 ## Why not just `scipy.stats` + a notebook?
 
-| Capability                                    | absim   | scipy / statsmodels | DIY notebook |
-|-----------------------------------------------|:-------:|:-------------------:|:------------:|
-| Welch / z-test / paired t-test                |   ✅    |        ✅           |      ✅       |
-| **CUPED / CUPAC** variance reduction          |   ✅    |        ❌           |    rare      |
-| **Post-stratification & matched pairs**       |   ✅    |        ❌           |    rare      |
-| **Bootstrap (percentile + BCa)** vectorised   |   ✅    |     partial         |    slow      |
-| **Delta-method & Budylin linearization** for ratio metrics | ✅ | ❌            |    rare      |
-| **10k-sim Monte Carlo engine** (parallel, reproducible) | ✅ |    N/A          |  hand-rolled |
-| Calibration: Wilson CI band on FPR estimate   |   ✅    |        ❌           |    rare      |
-| One unified `Criterion` Protocol — drop in your own | ✅ |        ❌           |     N/A      |
-| Hydra configs + CLI for running experiment grids | ✅  |        ❌           |     N/A      |
+| Capability                                                      | absim | `scipy`/`statsmodels` | `cluster_experiments` | DIY notebook |
+|-----------------------------------------------------------------|:-----:|:---------------------:|:---------------------:|:------------:|
+| Welch / z-test / paired t-test                                  |  ✅   |          ✅           |          ✅           |      ✅       |
+| **Bootstrap-from-real-data** generator (`EmpiricalGenerator`)   |  ✅   |          ❌           |          ✅           |    custom    |
+| **CUPED / CUPAC** variance reduction                            |  ✅   |          ❌           |          ✅           |    custom    |
+| **Post-stratification & matched pairs**                         |  ✅   |          ❌           |        partial        |    custom    |
+| **Bootstrap (percentile + BCa)** vectorised                     |  ✅   |        partial        |          ❌           |     slow     |
+| **Delta-method & Budylin linearization** for ratio metrics      |  ✅   |          ❌           |          ❌           |     rare     |
+| **Calibration audit**: Wilson CI on FPR for any in-house code   |  ✅   |          ❌           |        partial        |     rare     |
+| One unified `Criterion` Protocol — drop in your own             |  ✅   |          ❌           |          ❌           |     N/A      |
+| 10k-sim Monte Carlo engine (parallel, bit-identical reproducible) | ✅ |         N/A           |          ✅           |  hand-rolled |
+| Hydra configs + CLI for running experiment grids                |  ✅   |          ❌           |          ❌           |     N/A      |
 
 If you're a working DS or experimentation-platform engineer, you've
 re-implemented some of this code. `absim` consolidates it once, calibrated,

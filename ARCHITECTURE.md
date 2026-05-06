@@ -13,10 +13,12 @@ the rule is wrong — for *your* sample size, *your* data shape, *your* effect
 size — and the team only finds out after shipping a miscalibrated test or
 chasing a non-result that a more powerful criterion would have caught.
 
-`absim` exists so that question stops being a guess. You describe the data
-shape (sample size, distribution, covariate strength, ratio metric
-structure, etc.), pick a list of criteria to compare, and `absim` runs
-**10 000+ synthetic experiments** and reports, for each criterion:
+`absim` exists so that question stops being a guess. The simulator drives
+off **your real production data** via `EmpiricalGenerator` (bootstrap-
+resamples from observed historical outcomes), or off one of three
+parametric generators when historical data isn't available. Pick a list of
+criteria to compare, and `absim` runs **10 000+ synthetic experiments** and
+reports, for each criterion:
 
 - the **false-positive rate** under H₀, with a Wilson 95% CI so you can
   separate noise from real miscalibration;
@@ -28,6 +30,11 @@ ratio-metric criteria (delta-method, Budylin linearization), bootstrap
 (percentile + BCa) — under one `Criterion` Protocol so swapping criteria is
 a one-line change. The simulator is fast (10 000 Welch sims in ~1.3 s),
 parallel, and reproducible bit-for-bit from a single integer seed.
+
+The `EmpiricalGenerator` design is what closes the "but it's all synthetic"
+objection: the bootstrap inherits whatever quirks live in your warehouse
+data — zero inflation, heavy tails, multimodality, clipping — that the
+parametric generators won't reproduce.
 
 ## High-level shape
 

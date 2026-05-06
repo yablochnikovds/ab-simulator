@@ -1,13 +1,20 @@
 # absim
 
-> **Don't pick an A/B-test criterion blind. Run it on synthetic data first.**
+> **Power-analyze A/B-test criteria on your real production data — not on toy Gaussians.**
 
-`absim` is a Monte Carlo simulator for A/B-test statistical criteria. Given a
-description of *your* data shape, it generates 10 000+ synthetic experiments
-and reports — with a binomial confidence band — the **false-positive rate**
-under H₀ and the **power** under H₁ for every criterion you ask about. That
-turns vague intuition ("CUPED reduces variance") into a number you can show
-to your team.
+`absim` is a Monte Carlo simulator for A/B-test statistical criteria. Hand
+it a NumPy array of historical outcomes from your warehouse —
+`EmpiricalGenerator` bootstrap-resamples your real distribution, injects a
+calibrated effect, and runs 10 000+ synthetic experiments. The simulator
+reports — with a Wilson confidence band — the **false-positive rate** under
+H₀ and the **power** under H₁ for every criterion you ask about. The
+synthetic experiments inherit your data's quirks (zero-inflation, heavy
+tails, multi-modality, clipping artifacts) — exactly the things parametric
+generators won't reproduce.
+
+The result: vague intuition ("CUPED reduces variance") becomes a number you
+can show to your team. Not a textbook number from a Gaussian assumption —
+**your number, on your data**.
 
 ## Real-world problems it solves
 
@@ -72,6 +79,9 @@ sweep effect sizes, or write artifacts to parquet.
 
 ## Where to next
 
+- **[Power on real data](real_data.md)** — feed `EmpiricalGenerator` your
+  warehouse pull and run a calibration audit + power analysis on the actual
+  distribution.
 - **[Tutorial](tutorial.md)** — synthesising data, running the simulator,
   reading the report.
 - **[Criterion reference](criteria/index.md)** — the math behind each

@@ -8,11 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`absim.generators.EmpiricalGenerator`** — bootstrap-resamples from real
+  observed data (NumPy arrays / pandas columns from your warehouse) and
+  injects calibrated effects into the treatment arm. Auto-detects
+  continuous / binary / ratio metric types and supports paired covariates,
+  strata, and numerator/denominator pairs. Closes the "but I can't run
+  absim on my real data" objection: the simulator now drives off your
+  actual distribution.
 - `_stats.make_result(...)` and `_stats.degenerate_result(...)` helpers and a
   `_stats.two_sided_t_pvalue(...)` p-value helper that absorb the
   `TestResult` boilerplate from every criterion.
 - `generators.base.make_strata(...)` shared helper used by all three
-  generators for equal-frequency stratum binning.
+  parametric generators for equal-frequency stratum binning.
+
+### Changed
+
+- **`BinaryGenerator`** now numerically calibrates the logistic slope
+  ``β`` (via Brent's method) so the realised ``corr(Y, X)`` actually
+  matches the requested ``rho`` to ≈ 1e-3, instead of the previous loose
+  heuristic ``β = 2·rho`` which produced ``corr ≈ rho/2`` for ``p = 0.1``.
+  Saturates gracefully when the request exceeds what a logistic link can
+  produce at the given baseline ``p``.
 
 ### Documentation
 
