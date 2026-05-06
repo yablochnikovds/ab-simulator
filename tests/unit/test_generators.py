@@ -103,3 +103,26 @@ def test_binary_generator_realised_correlation_matches_request(rho):
     assert abs(realised - rho) < 0.02, (
         f"requested rho={rho}, realised={realised:.4f}; calibration regressed"
     )
+
+
+@pytest.mark.parametrize(
+    ("p", "rho"),
+    [(0.1, 0.3), (0.3, 0.3), (0.5, 0.3), (0.5, 0.5), (0.8, 0.3)],
+)
+def test_binary_calibration_across_baselines(p, rho):
+    """Brent-method calibration must hit ``rho`` to ±0.025 across realistic ``p``."""
+    gen = BinaryGenerator(n_per_group=50_000, p=p, rho=rho)
+    rng = np.random.default_rng(0)
+    s = gen.sample(rng, 0.0)
+    realised = float(np.corrcoef(s.control, s.aux["covariate_control"])[0, 1])
+    assert abs(realised - rho) < 0.025, f"requested rho={rho} at p={p}, realised={realised:.4f}"
+
+
+def test_binary_saturates_when_request_unreachable():
+    """At p=0.05 the logistic link can't reach corr=0.95 — saturate honestly."""
+    gen = BinaryGenerator(n_per_group=50_000, p=0.05, rho=0.95)
+    rng = np.random.default_rng(0)
+    s = gen.sample(rng, 0.0)
+    realised = float(np.corrcoef(s.control, s.aux["covariate_control"])[0, 1])
+    # Saturate below the request, but stay strictly positive.
+    assert 0.0 < realised < 0.95

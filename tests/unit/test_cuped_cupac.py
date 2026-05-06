@@ -81,3 +81,18 @@ def test_cupac_requires_predictions_or_features():
     rng = np.random.default_rng(0)
     with pytest.raises(ValueError, match="prediction|features"):
         CUPAC().test(rng.normal(size=10), rng.normal(size=10))
+
+
+def test_cupac_pooled_oof_unbiased_under_h1():
+    """Pooled OOF must preserve the average treatment effect under H₁."""
+    rng = np.random.default_rng(0)
+    n = 1000
+    feat = rng.normal(size=(2 * n, 3))
+    feat_t, feat_c = feat[:n], feat[n:]
+    base = feat @ np.array([0.5, -0.3, 0.2])
+    y_t = base[:n] + 0.5 + rng.normal(size=n) * 0.5  # +0.5 effect
+    y_c = base[n:] + rng.normal(size=n) * 0.5
+    res = CUPAC(n_splits=5).test(y_t, y_c, features_treatment=feat_t, features_control=feat_c)
+    assert abs(res.effect - 0.5) < 0.1, (
+        f"pooled-OOF must preserve ATE; got effect={res.effect:.4f} (expected 0.5)"
+    )
