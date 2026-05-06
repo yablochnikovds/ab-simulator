@@ -7,7 +7,6 @@ import pytest
 
 from absim.generators import EmpiricalGenerator, Sample
 
-
 # ----------------------------- validation ----------------------------------
 
 
@@ -18,23 +17,17 @@ def test_requires_at_least_2_observations():
 
 def test_covariate_length_must_match():
     with pytest.raises(ValueError, match="`covariate`"):
-        EmpiricalGenerator(
-            outcomes=np.array([1.0, 2.0, 3.0]), covariate=np.array([0.5, 0.6])
-        )
+        EmpiricalGenerator(outcomes=np.array([1.0, 2.0, 3.0]), covariate=np.array([0.5, 0.6]))
 
 
 def test_strata_length_must_match():
     with pytest.raises(ValueError, match="`strata`"):
-        EmpiricalGenerator(
-            outcomes=np.array([1.0, 2.0, 3.0]), strata=np.array([0, 1])
-        )
+        EmpiricalGenerator(outcomes=np.array([1.0, 2.0, 3.0]), strata=np.array([0, 1]))
 
 
 def test_ratio_requires_both_arrays():
     with pytest.raises(ValueError, match="`numerator` and `denominator`"):
-        EmpiricalGenerator(
-            outcomes=np.array([0.1, 0.2, 0.3]), numerator=np.array([1.0, 2.0, 3.0])
-        )
+        EmpiricalGenerator(outcomes=np.array([0.1, 0.2, 0.3]), numerator=np.array([1.0, 2.0, 3.0]))
     with pytest.raises(ValueError, match="`numerator` and `denominator`"):
         EmpiricalGenerator(
             outcomes=np.array([0.1, 0.2, 0.3]), denominator=np.array([1.0, 2.0, 3.0])
@@ -85,9 +78,7 @@ def test_continuous_mode_when_no_special_structure():
 
 def test_sample_shape_continuous():
     rng = np.random.default_rng(0)
-    gen = EmpiricalGenerator(
-        outcomes=np.linspace(1.0, 5.0, 50), n_per_group=200, name="hist"
-    )
+    gen = EmpiricalGenerator(outcomes=np.linspace(1.0, 5.0, 50), n_per_group=200, name="hist")
     sample = gen.sample(rng, mean_shift=0.0)
     assert isinstance(sample, Sample)
     assert sample.treatment.shape == (200,)
@@ -111,9 +102,7 @@ def test_aux_includes_covariate_and_features():
 
 def test_aux_includes_strata_when_provided():
     rng = np.random.default_rng(0)
-    gen = EmpiricalGenerator(
-        outcomes=np.arange(20.0), strata=np.arange(20) % 4, n_per_group=80
-    )
+    gen = EmpiricalGenerator(outcomes=np.arange(20.0), strata=np.arange(20) % 4, n_per_group=80)
     s = gen.sample(rng, mean_shift=0.0)
     assert "strata_treatment" in s.aux
     assert s.aux["strata_treatment"].dtype.kind in ("i", "u")
@@ -152,9 +141,7 @@ def test_aux_includes_numerator_and_denominator_in_ratio_mode():
 
 def test_continuous_absolute_shift_increases_mean():
     rng = np.random.default_rng(0)
-    gen = EmpiricalGenerator(
-        outcomes=np.linspace(0.0, 10.0, 1000), n_per_group=500, relative=False
-    )
+    gen = EmpiricalGenerator(outcomes=np.linspace(0.0, 10.0, 1000), n_per_group=500, relative=False)
     s = gen.sample(rng, mean_shift=2.5)
     # Expected: control mean ~5, treatment mean ~7.5
     assert abs(s.treatment.mean() - 7.5) < 0.5
@@ -163,9 +150,7 @@ def test_continuous_absolute_shift_increases_mean():
 
 def test_continuous_relative_shift_multiplies():
     rng = np.random.default_rng(0)
-    gen = EmpiricalGenerator(
-        outcomes=np.full(500, 4.0), n_per_group=500, relative=True
-    )
+    gen = EmpiricalGenerator(outcomes=np.full(500, 4.0), n_per_group=500, relative=True)
     s = gen.sample(rng, mean_shift=0.25)
     # relative: 4.0 * 1.25 = 5.0
     assert abs(s.treatment.mean() - 5.0) < 1e-9
