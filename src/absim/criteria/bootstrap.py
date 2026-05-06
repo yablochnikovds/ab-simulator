@@ -112,8 +112,8 @@ class Bootstrap:
         se = float(np.std(boot_diff, ddof=1))
 
         if self.method == "percentile":
-            lo = float(np.quantile(boot_diff, self.alpha / 2.0))
-            hi = float(np.quantile(boot_diff, 1.0 - self.alpha / 2.0))
+            q_lo, q_hi = np.quantile(boot_diff, [self.alpha / 2.0, 1.0 - self.alpha / 2.0])
+            lo, hi = float(q_lo), float(q_hi)
         else:  # bca
             jack_t = _jackknife_means(treatment)
             jack_c = _jackknife_means(control)

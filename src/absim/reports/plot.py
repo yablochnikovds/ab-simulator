@@ -10,7 +10,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
 
 from absim.reports.io import reports_to_dataframe
@@ -102,6 +101,4 @@ def plot_power_curve(
     ax.grid(alpha=0.3)
     ax.legend(loc="lower right", fontsize=9)
     fig.tight_layout()
-    # Encourage downstream callers to manage figure life-cycle.
-    _ = np.array(0)  # keep numpy import non-noop for future extensions
     return fig

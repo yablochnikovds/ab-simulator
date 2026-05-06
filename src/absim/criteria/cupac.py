@@ -21,10 +21,11 @@ ML-extension of CUPED.)
 from __future__ import annotations
 
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol
 
 import numpy as np
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import RidgeCV
 from sklearn.model_selection import KFold
 
@@ -68,9 +69,9 @@ def _oof_predict_pooled(
     n_t = X_t.shape[0]
     n = X.shape[0]
     with warnings.catch_warnings():
-        # RidgeCV warns about LOO degeneracy on very small folds; harmless here.
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-        warnings.simplefilter("ignore", category=UserWarning)
+        # RidgeCV emits ConvergenceWarning on tiny folds; everything else
+        # should still surface to the caller.
+        warnings.simplefilter("ignore", category=ConvergenceWarning)
         if n < n_splits:
             model = regressor_factory()
             model.fit(X, y)
@@ -105,7 +106,6 @@ class CUPAC:
     n_splits: int = 5
     seed: int = 0
     name: str = "cupac"
-    _cuped: CUPED = field(default_factory=CUPED, init=False, repr=False)
 
     def test(
         self,

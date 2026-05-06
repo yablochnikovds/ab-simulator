@@ -65,8 +65,7 @@ def _run(ns: argparse.Namespace) -> int:
     sys.argv = [sys.argv[0], *overrides]
 
     import hydra
-    from hydra.utils import instantiate
-    from omegaconf import DictConfig, OmegaConf
+    from omegaconf import DictConfig
 
     from absim.config import register_configs
 
@@ -79,8 +78,6 @@ def _run(ns: argparse.Namespace) -> int:
         _execute(cfg)
 
     _entry()
-    # Avoid lint complaints about unused imports.
-    _ = (instantiate, OmegaConf)
     return 0
 
 
