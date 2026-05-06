@@ -49,7 +49,7 @@ def _run_one(
     return criterion.test(sample.treatment, sample.control, rng=rng, **sample.aux)
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class Simulator:
     """Monte Carlo simulator for one (generator, criterion) pair.
 
@@ -123,7 +123,7 @@ class Simulator:
     ) -> list[TestResult]:
         """Run all iterations either serially or via ``joblib``."""
         if parallel and self.n_jobs not in (0, 1):
-            # batch_size="auto" amortises joblib's per-task IPC overhead, which
+            # batch_size="auto" amortizes joblib's per-task IPC overhead, which
             # would otherwise dominate the runtime for fast criteria like Welch.
             parallel_runner: Any = Parallel(n_jobs=self.n_jobs, backend="loky", batch_size="auto")
             tasks = (

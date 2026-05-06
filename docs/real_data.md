@@ -91,41 +91,53 @@ report = Simulator(gen, InHouseTest(), n_sims=10_000, seed=0).run()
 print(f"In-house FPR: {report.fpr:.4f} "
       f"(95% Wilson CI: [{report.binomial_ci_low:.4f}, "
       f"{report.binomial_ci_high:.4f}])")
-# If 0.05 ∉ CI, your in-house code is mis-calibrated and you have a bug.
+# If 0.05 ∉ CI, your in-house code is miscalibrated and you have a bug.
 ```
 
 If the Wilson CI brackets α (0.05), the in-house code is calibrated. If
 not, the simulation just caught a real production bug.
 
-## Workflow 3 — variance reduction on your CTR metric
+## Workflow 3 — variance reduction with CUPED on any metric
 
-You have a ratio metric (CTR per session) and a pre-experiment per-user
-covariate (last-week activity). Should you adopt CUPED? Compare on real
-historical data.
+CUPED reduces variance whenever you have a per-unit pre-experiment covariate
+that correlates with the outcome — *any* outcome. This works equally well
+on continuous metrics (revenue, watch-time), binary metrics (conversion),
+and ratio metrics (CTR per session). The variance reduction approaches
+``1 − ρ²`` where ``ρ = Corr(outcome, covariate)``.
+
+The example below uses continuous revenue with a pre-period activity
+covariate; for binary or ratio metrics swap in the appropriate columns.
 
 ```python
 from absim.criteria import CUPED, WelchTTest
 from absim.generators import EmpiricalGenerator
 
-# Real warehouse pull: per-user click rate, paired with last-week sessions.
+# Real warehouse pull: per-user revenue last month, paired with sessions
+# the month before (the canonical CUPED setup from Deng et al. 2013).
 df = pd.read_parquet("user_metrics_last_month.parquet")
 
 gen = EmpiricalGenerator(
-    outcomes=df["click_rate"].to_numpy(dtype=float),
-    covariate=df["sessions_last_week"].to_numpy(dtype=float),
+    outcomes=df["revenue"].to_numpy(dtype=float),
+    covariate=df["sessions_prior_month"].to_numpy(dtype=float),
     n_per_group=5000,
+    relative=True,
 )
 
 for crit in (WelchTTest(), CUPED()):
     sim = Simulator(gen, crit, n_sims=5000,
-                    effect=EffectSize("+5pp", 0.05), seed=0)
+                    effect=EffectSize("+5%", 0.05), seed=0)
     r = sim.run()
     print(f"{crit.name:>8s}  power = {r.power:.3f}")
 ```
 
 If the CUPED line beats Welch by a meaningful margin (e.g. +20 percentage
 points of power), the pre-period covariate is informative enough to be
-worth the engineering work.
+worth the engineering work. For binary outcomes (conversion), point the
+``outcomes=`` column at the 0/1 array and CUPED will run on the linear
+adjustment of the conversion indicator. For ratio metrics, run
+[`Linearization`][absim.criteria.Linearization] first (or in parallel) —
+it usually outperforms CUPED-on-the-realised-ratio on heavily skewed
+denominators.
 
 ## When `EmpiricalGenerator` is the right choice — and when it isn't
 

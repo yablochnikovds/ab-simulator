@@ -70,7 +70,7 @@ sweep effect sizes, or write artifacts to parquet.
 - **Ratio-metric criteria are first-class** — `DeltaMethod` and Budylin
   `Linearization` are built in, with generators that produce realistic
   numerator–denominator correlation (Poisson sessions × per-user rate).
-- **The simulator is fast and reproducible** — vectorised hot paths,
+- **The simulator is fast and reproducible** — vectorized hot paths,
   `joblib` parallelism, bit-identical results across `parallel=False/True`
   via `SeedSequence.spawn()`. 10 000 Welch simulations in ~1.3 s.
 - **Calibration is reported with a confidence band** — every rejection rate
@@ -82,7 +82,7 @@ sweep effect sizes, or write artifacts to parquet.
 - **[Power on real data](real_data.md)** — feed `EmpiricalGenerator` your
   warehouse pull and run a calibration audit + power analysis on the actual
   distribution.
-- **[Tutorial](tutorial.md)** — synthesising data, running the simulator,
+- **[Tutorial](tutorial.md)** — synthesizing data, running the simulator,
   reading the report.
 - **[Criterion reference](criteria/index.md)** — the math behind each
   criterion, with assumptions, formulae, and references.

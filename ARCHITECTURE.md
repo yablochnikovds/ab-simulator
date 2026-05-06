@@ -153,7 +153,7 @@ Asymptotically equivalent. We ship both because:
 - Delta-method gives a closed-form variance and a clean z-test.
 - Linearization produces a per-unit additive metric `L_i`, which lets you
   drop in **any** further variance reduction (CUPED, post-stratification)
-  on top of the linearised values. This is the Budylin recipe.
+  on top of the linearized values. This is the Budylin recipe.
 
 ### Wilson interval for the rejection-rate band
 

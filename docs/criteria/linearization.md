@@ -13,7 +13,7 @@ all just operate on a per-unit metric.
 
 ## Implementation note
 
-`absim` linearises against the **pooled** numerator and denominator means
+`absim` linearizes against the **pooled** numerator and denominator means
 (Budylin's recipe), so both arms share the same linear functional.
 
 ## API

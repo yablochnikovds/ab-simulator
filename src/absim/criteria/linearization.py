@@ -39,7 +39,7 @@ def _linearize(
 ) -> tuple[FloatArray, FloatArray]:
     """Linearise per-unit (N, D) into a single additive metric per unit.
 
-    Both arms are linearised against the **pooled** numerator and
+    Both arms are linearized against the **pooled** numerator and
     denominator means.
     """
     n_pool = np.concatenate([num_t, num_c])
@@ -47,7 +47,7 @@ def _linearize(
     n_bar = float(n_pool.mean())
     d_bar = float(d_pool.mean())
     if d_bar == 0.0:
-        raise ValueError("pooled denominator mean is zero — cannot linearise")
+        raise ValueError("pooled denominator mean is zero — cannot linearize")
     coef = n_bar / (d_bar**2)
     L_t = num_t / d_bar - coef * den_t
     L_c = num_c / d_bar - coef * den_c
@@ -57,7 +57,7 @@ def _linearize(
 @register("linearization")
 @dataclass(frozen=True, slots=True)
 class Linearization:
-    """Budylin linearization + Welch's t-test on the linearised metric.
+    """Budylin linearization + Welch's t-test on the linearized metric.
 
     Required kwargs
     ---------------
@@ -74,7 +74,7 @@ class Linearization:
         control: FloatArray,
         **kwargs: Any,
     ) -> TestResult:
-        """Run a Welch t-test on the Budylin-linearised ratio metric."""
+        """Run a Welch t-test on the Budylin-linearized ratio metric."""
         try:
             num_t = np.asarray(kwargs["numerator_treatment"], dtype=float)
             den_t = np.asarray(kwargs["denominator_treatment"], dtype=float)

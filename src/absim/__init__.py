@@ -29,7 +29,7 @@ The package exposes:
 - :mod:`absim.criteria` — statistical criteria (Welch, CUPED, bootstrap, ...).
 - :mod:`absim.generators` — synthetic data generators (continuous, binary, ratio).
 - :mod:`absim.simulator` — the Monte Carlo engine.
-- :mod:`absim.reports` — aggregation & visualisation.
+- :mod:`absim.reports` — aggregation & visualization.
 
 Example
 -------

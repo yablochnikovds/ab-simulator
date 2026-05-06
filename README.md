@@ -125,12 +125,13 @@ class InHouseTest:
                           ci_low=r.ci[0], ci_high=r.ci[1],
                           rejected=r.p_value < self.alpha)
 
-# Run the audit on REAL data, not on a Gaussian toy.
+# Run the audit on REAL data, not on a Gaussian toy. `revenue` is the
+# warehouse pull from Example #1 above.
 gen = EmpiricalGenerator(outcomes=revenue, n_per_group=5000)
 report = Simulator(gen, InHouseTest(), n_sims=10_000, seed=0).run()
 print(f"FPR={report.fpr:.4f}  Wilson 95% CI=[{report.binomial_ci_low:.4f}, "
       f"{report.binomial_ci_high:.4f}]")
-# If 0.05 ∉ CI, your in-house code is mis-calibrated → bug to fix.
+# If 0.05 ∉ CI, your in-house code is miscalibrated → bug to fix.
 ```
 
 ### 4. "Delta-method, linearization, or bootstrap for my CTR?"
@@ -185,19 +186,22 @@ print(sim.run().power)   # compare against WelchTTest() on the same data
 | Capability                                                      | absim | `scipy`/`statsmodels` | `cluster_experiments` | DIY notebook |
 |-----------------------------------------------------------------|:-----:|:---------------------:|:---------------------:|:------------:|
 | Welch / z-test / paired t-test                                  |  ✅   |          ✅           |          ✅           |      ✅       |
-| **Bootstrap-from-real-data** generator (`EmpiricalGenerator`)   |  ✅   |          ❌           |          ✅           |    custom    |
-| **CUPED / CUPAC** variance reduction                            |  ✅   |          ❌           |          ✅           |    custom    |
-| **Post-stratification & matched pairs**                         |  ✅   |          ❌           |        partial        |    custom    |
-| **Bootstrap (percentile + BCa)** vectorised                     |  ✅   |        partial        |          ❌           |     slow     |
+| Empirical bootstrap-from-real-data + calibrated effect injection |  ✅  |          ❌           |        partial        |    custom    |
+| CUPED variance reduction                                        |  ✅   |          ❌           |          ✅           |    custom    |
+| **CUPAC** (out-of-fold ML predictor as covariate)               |  ✅   |          ❌           |          ❌           |     rare     |
+| Post-stratification & matched pairs                             |  ✅   |          ❌           |        partial        |    custom    |
+| **BCa bootstrap** (jackknife-accelerated), vectorized           |  ✅   |        partial        |          ❌           |     slow     |
 | **Delta-method & Budylin linearization** for ratio metrics      |  ✅   |          ❌           |          ❌           |     rare     |
-| **Calibration audit**: Wilson CI on FPR for any in-house code   |  ✅   |          ❌           |        partial        |     rare     |
+| Calibration audit: Wilson CI on FPR for any in-house criterion  |  ✅   |          ❌           |        partial        |     rare     |
 | One unified `Criterion` Protocol — drop in your own             |  ✅   |          ❌           |          ❌           |     N/A      |
 | 10k-sim Monte Carlo engine (parallel, bit-identical reproducible) | ✅ |         N/A           |          ✅           |  hand-rolled |
 | Hydra configs + CLI for running experiment grids                |  ✅   |          ❌           |          ❌           |     N/A      |
 
-If you're a working DS or experimentation-platform engineer, you've
-re-implemented some of this code. `absim` consolidates it once, calibrated,
-tested, and benchmarked against textbook references.
+`cluster_experiments` is the closest sibling — it shines for clustered /
+switchback designs and accepts your raw DataFrame for power analysis.
+`absim` complements it with **CUPAC, BCa bootstrap, ratio-metric
+linearization, and a calibration-audit harness** for vetting in-house
+statistical code on real warehouse data.
 
 ---
 
@@ -286,7 +290,7 @@ Each generator emits all auxiliary arrays the criteria need
 
 ## Documentation
 
-- 📖 [Tutorial](docs/tutorial.md) — synthesise data → run the simulator → read
+- 📖 [Tutorial](docs/tutorial.md) — synthesize data → run the simulator → read
   the report.
 - 📐 [Criterion reference](docs/criteria/) — formula, intuition, assumptions for
   each criterion (Welch, CUPED, CUPAC, bootstrap, delta-method, …).

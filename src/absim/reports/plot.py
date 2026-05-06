@@ -1,7 +1,7 @@
 """Static plotting for simulation reports.
 
 Both functions return the underlying :class:`~matplotlib.figure.Figure` so
-callers can save / further customise. Seaborn supplies the colour palette but
+callers can save / further customize. Seaborn supplies the color palette but
 all annotations are done with plain matplotlib for portability.
 """
 

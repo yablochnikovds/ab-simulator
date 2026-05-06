@@ -1,6 +1,6 @@
 """End-to-end smoke test of the CLI's ``run`` subcommand.
 
-Exercises ``_execute`` directly with a synthesised DictConfig, avoiding
+Exercises ``_execute`` directly with a synthesized DictConfig, avoiding
 Hydra's ``@hydra.main`` decorator (which we test indirectly by spawning
 a subprocess in CI).
 """

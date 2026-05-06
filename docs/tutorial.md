@@ -4,7 +4,7 @@ This walkthrough uses Welch's t-test on a Gaussian outcome to demonstrate
 the full `absim` workflow. Once you've finished it, swapping in any other
 criterion or generator is a one-line change.
 
-## 1. Synthesise data
+## 1. Synthesize data
 
 Pick a generator. The continuous generator emits a Gaussian outcome plus a
 pre-experiment covariate (so CUPED has something to work with) and strata

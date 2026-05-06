@@ -6,7 +6,7 @@ out via ``pytest -m statistical`` or ``pytest -m 'not statistical'``.
 
 We validate FPR with a 99% binomial CI: at α = 0.05 and N = 3000 sims, the
 CI is approximately [0.040, 0.060] under H₀. A failure here means the
-criterion is genuinely mis-calibrated, not flaky.
+criterion is genuinely miscalibrated, not flaky.
 """
 
 from __future__ import annotations
@@ -15,7 +15,6 @@ import pytest
 from scipy.stats import binom
 
 from absim import EffectSize, Simulator
-from absim._stats import wilson_ci
 from absim.criteria import (
     CUPED,
     Bootstrap,
@@ -34,12 +33,6 @@ pytestmark = pytest.mark.statistical
 N_SIMS = 3000
 ALPHA = 0.05
 SEED = 13
-
-
-def _binomial_ci_99(rate: float, n: int) -> tuple[float, float]:
-    """Tight 99% binomial CI used as the FPR pass/fail gate."""
-    lo, hi = wilson_ci(int(round(rate * n)), n, confidence=0.99)
-    return lo, hi
 
 
 def _assert_fpr_in_ci(rate: float, n_sims: int, alpha: float = ALPHA) -> None:
