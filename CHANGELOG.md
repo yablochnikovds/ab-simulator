@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `generators.base.make_strata(...)` shared helper used by all three
   generators for equal-frequency stratum binning.
 
+### Documentation
+
+- README, `docs/index.md`, package docstring and ARCHITECTURE.md rewritten
+  around concrete use-cases ("will CUPED be worth the effort?", "is my
+  in-house t-test calibrated?", "delta-method or linearization for our
+  CTR?", "is t-test safe on heavy-tailed revenue?") rather than abstract
+  feature lists.
+
 ### Changed
 
 - `_stats.welch_ttest` now returns the Welch–Satterthwaite degrees of freedom

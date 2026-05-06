@@ -1,16 +1,28 @@
 # absim
 
-> Monte Carlo validator for A/B testing criteria — verify FPR ≈ α and quantify
-> power on synthetic data, before you commit to a criterion in production.
+> **Don't pick an A/B-test criterion blind. Run it on synthetic data first.**
 
-`absim` lets you ask, *empirically*:
+`absim` is a Monte Carlo simulator for A/B-test statistical criteria. Given a
+description of *your* data shape, it generates 10 000+ synthetic experiments
+and reports — with a binomial confidence band — the **false-positive rate**
+under H₀ and the **power** under H₁ for every criterion you ask about. That
+turns vague intuition ("CUPED reduces variance") into a number you can show
+to your team.
 
-- **Is my chosen criterion calibrated?** Run 10 000+ simulations under H₀
-  and read the false-positive rate with a Wilson confidence band.
-- **How much power does it actually have?** Sweep effect sizes and watch
-  power curves diverge between Welch, CUPED, post-stratification, etc.
-- **Is the variance reduction real?** CUPED's `1 − ρ²` claim becomes a
-  number you can plot.
+## Real-world problems it solves
+
+- *"Will CUPED actually be worth the engineering effort on our `n` and `ρ`?"*
+- *"Is my in-house t-test / bootstrap really calibrated under H₀?"*
+- *"For our CTR metric, should we use delta-method, Budylin linearization, or
+  bootstrap?"*
+- *"My revenue metric has heavy tails — is t-test still safe, or do we need
+  bootstrap?"*
+- *"Does post-stratification actually buy us power on our covariate?"*
+- *"I'm prototyping a new criterion — is its FPR within the binomial CI of α?"*
+
+`absim` answers each of these by **running the experiment thousands of times
+on synthetic data that looks like yours**, then reporting calibration and
+power side-by-side across every criterion you compare.
 
 ## A typical session
 
@@ -35,9 +47,28 @@ for crit in (WelchTTest(), CUPED()):
 ```
 
 ```text
- welch_t  power = 0.567  (0.553, 0.581)
-   cuped  power = 0.929  (0.921, 0.937)
+ welch_t  power = 0.609  (0.595, 0.622)
+   cuped  power = 0.801  (0.789, 0.811)
 ```
+
+`absim` reports the full `SimulationReport` so you can plot power curves,
+sweep effect sizes, or write artifacts to parquet.
+
+## What makes `absim` different
+
+- **Variance-reduction methods are first-class** — `CUPED`, `CUPAC`,
+  `PostStratification`, `PairedStratification` ship together under one
+  `Criterion` Protocol. Most other open-source statistics libraries cover
+  none of these.
+- **Ratio-metric criteria are first-class** — `DeltaMethod` and Budylin
+  `Linearization` are built in, with generators that produce realistic
+  numerator–denominator correlation (Poisson sessions × per-user rate).
+- **The simulator is fast and reproducible** — vectorised hot paths,
+  `joblib` parallelism, bit-identical results across `parallel=False/True`
+  via `SeedSequence.spawn()`. 10 000 Welch simulations in ~1.3 s.
+- **Calibration is reported with a confidence band** — every rejection rate
+  comes with a Wilson 95% CI, so you can tell a 0.06 FPR from a real
+  miscalibration.
 
 ## Where to next
 

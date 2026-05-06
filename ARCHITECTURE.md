@@ -4,6 +4,31 @@ This document explains how `absim` is laid out, why each architectural
 decision was made, and where `absim` deviates from naive implementations of
 the underlying statistical methods.
 
+## Why this project exists
+
+Most working data scientists pick A/B-test criteria by **rule of thumb**:
+"Welch for continuous, z-test for proportions, CUPED if we have a pre-period
+metric, bootstrap if I don't trust the parametric assumptions." Sometimes
+the rule is wrong — for *your* sample size, *your* data shape, *your* effect
+size — and the team only finds out after shipping a miscalibrated test or
+chasing a non-result that a more powerful criterion would have caught.
+
+`absim` exists so that question stops being a guess. You describe the data
+shape (sample size, distribution, covariate strength, ratio metric
+structure, etc.), pick a list of criteria to compare, and `absim` runs
+**10 000+ synthetic experiments** and reports, for each criterion:
+
+- the **false-positive rate** under H₀, with a Wilson 95% CI so you can
+  separate noise from real miscalibration;
+- the **power** under H₁ for the effect sizes you care about.
+
+The library consolidates the best statistical practice — variance-reduction
+methods (CUPED, CUPAC, post-stratification, paired stratification),
+ratio-metric criteria (delta-method, Budylin linearization), bootstrap
+(percentile + BCa) — under one `Criterion` Protocol so swapping criteria is
+a one-line change. The simulator is fast (10 000 Welch sims in ~1.3 s),
+parallel, and reproducible bit-for-bit from a single integer seed.
+
 ## High-level shape
 
 ```

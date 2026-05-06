@@ -1,4 +1,17 @@
-"""absim — Monte Carlo validator for A/B testing criteria.
+"""absim — pick the right A/B-test criterion before you ship it to prod.
+
+`absim` runs 10 000+ synthetic A/B experiments and reports, for every
+criterion you compare:
+
+- **calibration** — is the false-positive rate really α?
+  (with a Wilson confidence band so you can tell noise from miscalibration)
+- **power** — for the effect size you actually care about, on the sample
+  size you actually have, on the data shape you actually see.
+
+Use it to: choose between ``WelchTTest``, ``Bootstrap``, ``DeltaMethod``,
+``Linearization`` and friends; quantify the variance-reduction win from
+``CUPED``, ``CUPAC``, ``PostStratification``; or sanity-check your in-house
+test code by running it on synthetic data with a known true effect.
 
 The package exposes:
 
