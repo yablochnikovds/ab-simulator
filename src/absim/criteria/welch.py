@@ -11,9 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-import numpy as np
-
-from absim._stats import t_ci, welch_ttest
+from absim._stats import make_result, welch_ttest
 from absim.criteria.base import register
 from absim.types import TestResult
 
@@ -57,22 +55,13 @@ class WelchTTest:
         **kwargs: Any,
     ) -> TestResult:
         """Run Welch's t-test and return a :class:`TestResult`."""
-        statistic, p_value, effect, se = welch_ttest(treatment, control)
-        n_t, n_c = treatment.size, control.size
-        # Approximate Welch–Satterthwaite df for CI.
-        var_t = float(np.var(treatment, ddof=1))
-        var_c = float(np.var(control, ddof=1))
-        df_num = (var_t / n_t + var_c / n_c) ** 2
-        df_den = (var_t / n_t) ** 2 / (n_t - 1) + (var_c / n_c) ** 2 / (n_c - 1)
-        df = df_num / df_den if df_den > 0 else float(n_t + n_c - 2)
-        ci_low, ci_high = t_ci(effect, se, df, self.alpha) if se > 0 else (effect, effect)
-        return TestResult(
+        statistic, p_value, effect, se, df = welch_ttest(treatment, control)
+        return make_result(
             p_value=p_value,
             statistic=statistic,
             effect=effect,
             std_error=se,
-            ci_low=ci_low,
-            ci_high=ci_high,
-            rejected=p_value < self.alpha,
+            alpha=self.alpha,
+            df=df,
             metadata={"df": df},
         )

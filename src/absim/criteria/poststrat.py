@@ -26,9 +26,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from scipy import stats
 
-from absim._stats import t_ci
+from absim._stats import degenerate_result, make_result, two_sided_t_pvalue
 from absim.criteria.base import register
 from absim.types import TestResult
 
@@ -68,8 +67,7 @@ class PostStratification:
             raise ValueError("strata arrays must match outcome array sizes")
 
         n_total = treatment.size + control.size
-        all_strata = np.concatenate([strata_t, strata_c])
-        unique = np.unique(all_strata)
+        unique = np.unique(np.concatenate([strata_t, strata_c]))
 
         delta = 0.0
         var = 0.0
@@ -78,14 +76,13 @@ class PostStratification:
         for k in unique:
             mask_t = strata_t == k
             mask_c = strata_c == k
-            n_k = int(mask_t.sum() + mask_c.sum())
             n_tk = int(mask_t.sum())
             n_ck = int(mask_c.sum())
             if n_tk < 2 or n_ck < 2:
                 # Pooled-variance fallback when a stratum is too small to
                 # estimate per-arm variance.
                 continue
-            w_k = n_k / n_total
+            w_k = (n_tk + n_ck) / n_total
             mean_t = float(np.mean(treatment[mask_t]))
             mean_c = float(np.mean(control[mask_c]))
             var_t = float(np.var(treatment[mask_t], ddof=1))
@@ -98,27 +95,15 @@ class PostStratification:
 
         se = float(np.sqrt(var))
         if se == 0.0:
-            return TestResult(
-                p_value=1.0,
-                statistic=0.0,
-                effect=delta,
-                std_error=0.0,
-                ci_low=delta,
-                ci_high=delta,
-                rejected=False,
-                metadata={"n_strata": int(unique.size)},
-            )
+            return degenerate_result(delta, metadata={"n_strata": int(unique.size)})
         df = (df_num**2) / df_den if df_den > 0 else float(n_total - 2)
         t = delta / se
-        p_value = float(2.0 * stats.t.sf(abs(t), df))
-        ci_low, ci_high = t_ci(delta, se, df, self.alpha)
-        return TestResult(
-            p_value=p_value,
+        return make_result(
+            p_value=two_sided_t_pvalue(t, df),
             statistic=float(t),
             effect=delta,
             std_error=se,
-            ci_low=ci_low,
-            ci_high=ci_high,
-            rejected=p_value < self.alpha,
+            alpha=self.alpha,
+            df=df,
             metadata={"n_strata": int(unique.size), "df": df},
         )

@@ -13,22 +13,24 @@ def test_welch_matches_scipy():
     rng = np.random.default_rng(0)
     t = rng.normal(0.2, 1.0, size=200)
     c = rng.normal(0.0, 1.5, size=180)
-    stat, p, eff, se = welch_ttest(t, c)
+    stat, p, eff, se, df = welch_ttest(t, c)
     sp = sp_stats.ttest_ind(t, c, equal_var=False)
     assert eff == pytest.approx(t.mean() - c.mean())
     assert stat == pytest.approx(sp.statistic, rel=1e-10)
     assert p == pytest.approx(sp.pvalue, rel=1e-10)
     assert se > 0
+    assert df > 0
 
 
 def test_welch_handles_zero_variance():
     t = np.ones(10)
     c = np.ones(10)
-    stat, p, eff, se = welch_ttest(t, c)
+    stat, p, eff, se, df = welch_ttest(t, c)
     assert se == 0.0
     assert p == 1.0
     assert eff == 0.0
     assert stat == 0.0
+    assert df > 0
 
 
 def test_welch_requires_n_at_least_2():

@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from absim._stats import normal_ci, two_sided_normal_pvalue
+from absim._stats import degenerate_result, make_result, two_sided_normal_pvalue
 from absim.criteria.base import register
 from absim.types import TestResult
 
@@ -62,25 +62,13 @@ class ZTestProportions:
         # Unpooled SE for the CI.
         se_unpooled = float(np.sqrt(p_t * (1.0 - p_t) / n_t + p_c * (1.0 - p_c) / n_c))
         if se_pooled == 0.0:
-            return TestResult(
-                p_value=1.0,
-                statistic=0.0,
-                effect=effect,
-                std_error=0.0,
-                ci_low=effect,
-                ci_high=effect,
-                rejected=False,
-            )
+            return degenerate_result(effect)
         z = effect / se_pooled
-        p_value = two_sided_normal_pvalue(z)
-        ci_low, ci_high = normal_ci(effect, se_unpooled, self.alpha)
-        return TestResult(
-            p_value=p_value,
+        return make_result(
+            p_value=two_sided_normal_pvalue(z),
             statistic=float(z),
             effect=effect,
             std_error=se_unpooled,
-            ci_low=ci_low,
-            ci_high=ci_high,
-            rejected=p_value < self.alpha,
+            alpha=self.alpha,
             metadata={"p_pool": p_pool},
         )

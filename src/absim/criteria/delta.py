@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from absim._stats import normal_ci, two_sided_normal_pvalue
+from absim._stats import degenerate_result, make_result, two_sided_normal_pvalue
 from absim.criteria.base import register
 from absim.types import TestResult
 
@@ -93,25 +93,13 @@ class DeltaMethod:
         effect = ratio_t - ratio_c
         se = float(np.sqrt(var_t + var_c))
         if se == 0.0:
-            return TestResult(
-                p_value=1.0,
-                statistic=0.0,
-                effect=effect,
-                std_error=0.0,
-                ci_low=effect,
-                ci_high=effect,
-                rejected=False,
-            )
+            return degenerate_result(effect)
         z = effect / se
-        p_value = two_sided_normal_pvalue(z)
-        ci_low, ci_high = normal_ci(effect, se, self.alpha)
-        return TestResult(
-            p_value=p_value,
+        return make_result(
+            p_value=two_sided_normal_pvalue(z),
             statistic=float(z),
             effect=effect,
             std_error=se,
-            ci_low=ci_low,
-            ci_high=ci_high,
-            rejected=p_value < self.alpha,
+            alpha=self.alpha,
             metadata={"ratio_treatment": ratio_t, "ratio_control": ratio_c},
         )

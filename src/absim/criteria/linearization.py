@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from absim._stats import t_ci, welch_ttest
+from absim._stats import make_result, welch_ttest
 from absim.criteria.base import register
 from absim.types import TestResult
 
@@ -85,21 +85,13 @@ class Linearization:
                 "Linearization requires `{numerator,denominator}_{treatment,control}` kwargs"
             ) from exc
         L_t, L_c = _linearize(num_t, den_t, num_c, den_c)
-        statistic, p_value, effect, se = welch_ttest(L_t, L_c)
-        n_t, n_c = L_t.size, L_c.size
-        var_t = float(np.var(L_t, ddof=1))
-        var_c = float(np.var(L_c, ddof=1))
-        df_num = (var_t / n_t + var_c / n_c) ** 2
-        df_den = (var_t / n_t) ** 2 / (n_t - 1) + (var_c / n_c) ** 2 / (n_c - 1)
-        df = df_num / df_den if df_den > 0 else float(n_t + n_c - 2)
-        ci_low, ci_high = t_ci(effect, se, df, self.alpha) if se > 0 else (effect, effect)
-        return TestResult(
+        statistic, p_value, effect, se, df = welch_ttest(L_t, L_c)
+        return make_result(
             p_value=p_value,
             statistic=statistic,
             effect=effect,
             std_error=se,
-            ci_low=ci_low,
-            ci_high=ci_high,
-            rejected=p_value < self.alpha,
+            alpha=self.alpha,
+            df=df,
             metadata={"df": df},
         )

@@ -6,10 +6,12 @@ Functions are deterministic given identical inputs.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy import stats
+
+from absim.types import TestResult
 
 if TYPE_CHECKING:
     from absim.types import FloatArray
@@ -18,7 +20,7 @@ if TYPE_CHECKING:
 def welch_ttest(
     treatment: FloatArray,
     control: FloatArray,
-) -> tuple[float, float, float, float]:
+) -> tuple[float, float, float, float, float]:
     """Welch's two-sample t-test (unequal variances, two-sided).
 
     Parameters
@@ -28,9 +30,10 @@ def welch_ttest(
 
     Returns
     -------
-    statistic, p_value, effect, std_error
-        ``effect = mean(treatment) - mean(control)``,
-        ``std_error`` is the SE of that difference.
+    statistic, p_value, effect, std_error, df
+        ``effect = mean(treatment) - mean(control)``, ``std_error`` is the SE
+        of that difference, ``df`` is the Welch–Satterthwaite degrees of freedom
+        (returned even when ``std_error == 0`` so callers can build a CI).
     """
     if treatment.size < 2 or control.size < 2:
         raise ValueError("welch_ttest requires at least 2 observations per group")
@@ -40,22 +43,24 @@ def welch_ttest(
     var_c = float(np.var(control, ddof=1))
     n_t, n_c = treatment.size, control.size
     se = float(np.sqrt(var_t / n_t + var_c / n_c))
-    if se == 0.0:
-        # Degenerate: no variance in either group. Treat as no signal.
-        return 0.0, 1.0, mean_t - mean_c, 0.0
     effect = mean_t - mean_c
-    t = effect / se
-    # Welch–Satterthwaite degrees of freedom.
     df_num = (var_t / n_t + var_c / n_c) ** 2
     df_den = (var_t / n_t) ** 2 / (n_t - 1) + (var_c / n_c) ** 2 / (n_c - 1)
     df = df_num / df_den if df_den > 0 else float(n_t + n_c - 2)
-    p = float(2.0 * stats.t.sf(abs(t), df))
-    return float(t), p, effect, se
+    if se == 0.0:
+        return 0.0, 1.0, effect, 0.0, df
+    t = effect / se
+    return float(t), two_sided_t_pvalue(t, df), effect, se, df
 
 
 def two_sided_normal_pvalue(z: float) -> float:
     """Two-sided p-value of a standard-normal test statistic."""
     return float(2.0 * stats.norm.sf(abs(z)))
+
+
+def two_sided_t_pvalue(t: float, df: float) -> float:
+    """Two-sided p-value of a Student-t test statistic with ``df`` d.o.f."""
+    return float(2.0 * stats.t.sf(abs(t), df))
 
 
 def normal_ci(estimate: float, std_error: float, alpha: float) -> tuple[float, float]:
@@ -104,3 +109,54 @@ def make_rng(seed: int | np.random.SeedSequence | np.random.Generator) -> np.ran
     if isinstance(seed, np.random.Generator):
         return seed
     return np.random.default_rng(seed)
+
+
+def degenerate_result(effect: float, *, metadata: dict[str, Any] | None = None) -> TestResult:
+    """Return a no-signal :class:`TestResult` (SE = 0, p = 1, fail to reject).
+
+    Used when the data has insufficient variance to compute a real test statistic
+    (e.g. constant arrays, all-equal samples, degenerate strata).
+    """
+    return TestResult(
+        p_value=1.0,
+        statistic=0.0,
+        effect=effect,
+        std_error=0.0,
+        ci_low=effect,
+        ci_high=effect,
+        rejected=False,
+        metadata=metadata or {},
+    )
+
+
+def make_result(
+    *,
+    p_value: float,
+    statistic: float,
+    effect: float,
+    std_error: float,
+    alpha: float,
+    df: float | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> TestResult:
+    """Assemble a :class:`TestResult` with the appropriate CI flavour.
+
+    Picks Student-t CI when ``df`` is given, normal CI otherwise. Collapses the
+    SE-equals-zero case to a degenerate (effect, effect) interval.
+    """
+    if std_error <= 0.0:
+        ci_low = ci_high = effect
+    elif df is None:
+        ci_low, ci_high = normal_ci(effect, std_error, alpha)
+    else:
+        ci_low, ci_high = t_ci(effect, std_error, df, alpha)
+    return TestResult(
+        p_value=p_value,
+        statistic=statistic,
+        effect=effect,
+        std_error=std_error,
+        ci_low=ci_low,
+        ci_high=ci_high,
+        rejected=p_value < alpha,
+        metadata=metadata or {},
+    )

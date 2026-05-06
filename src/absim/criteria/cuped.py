@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from absim._stats import t_ci, welch_ttest
+from absim._stats import make_result, welch_ttest
 from absim.criteria.base import register
 from absim.types import TestResult
 
@@ -75,29 +75,21 @@ class CUPED:
             ) from exc
         if cov_t.size != treatment.size or cov_c.size != control.size:
             raise ValueError("covariate arrays must match outcome array sizes")
-        # Pool both groups to estimate theta — this is the standard practice
-        # because the covariate is independent of treatment assignment.
+        # Pool both groups to estimate theta — standard practice because the
+        # covariate is independent of treatment assignment.
         y_pool = np.concatenate([treatment, control])
         x_pool = np.concatenate([cov_t, cov_c])
         theta = self._theta(y_pool, x_pool)
         x_mean = float(x_pool.mean())
         adj_t = treatment - theta * (cov_t - x_mean)
         adj_c = control - theta * (cov_c - x_mean)
-        statistic, p_value, effect, se = welch_ttest(adj_t, adj_c)
-        n_t, n_c = adj_t.size, adj_c.size
-        var_t = float(np.var(adj_t, ddof=1))
-        var_c = float(np.var(adj_c, ddof=1))
-        df_num = (var_t / n_t + var_c / n_c) ** 2
-        df_den = (var_t / n_t) ** 2 / (n_t - 1) + (var_c / n_c) ** 2 / (n_c - 1)
-        df = df_num / df_den if df_den > 0 else float(n_t + n_c - 2)
-        ci_low, ci_high = t_ci(effect, se, df, self.alpha) if se > 0 else (effect, effect)
-        return TestResult(
+        statistic, p_value, effect, se, df = welch_ttest(adj_t, adj_c)
+        return make_result(
             p_value=p_value,
             statistic=statistic,
             effect=effect,
             std_error=se,
-            ci_low=ci_low,
-            ci_high=ci_high,
-            rejected=p_value < self.alpha,
+            alpha=self.alpha,
+            df=df,
             metadata={"theta": theta, "df": df},
         )

@@ -22,9 +22,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from scipy import stats
 
-from absim._stats import t_ci
+from absim._stats import degenerate_result, make_result, two_sided_t_pvalue
 from absim.criteria.base import register
 from absim.types import TestResult
 
@@ -95,27 +94,15 @@ class PairedStratification:
         var = float(np.var(diffs, ddof=1))
         se = float(np.sqrt(var / n))
         if se == 0.0:
-            return TestResult(
-                p_value=1.0,
-                statistic=0.0,
-                effect=mean,
-                std_error=0.0,
-                ci_low=mean,
-                ci_high=mean,
-                rejected=False,
-                metadata={"n_pairs": n},
-            )
+            return degenerate_result(mean, metadata={"n_pairs": n})
         t = mean / se
         df = float(n - 1)
-        p_value = float(2.0 * stats.t.sf(abs(t), df))
-        ci_low, ci_high = t_ci(mean, se, df, self.alpha)
-        return TestResult(
-            p_value=p_value,
+        return make_result(
+            p_value=two_sided_t_pvalue(t, df),
             statistic=float(t),
             effect=mean,
             std_error=se,
-            ci_low=ci_low,
-            ci_high=ci_high,
-            rejected=p_value < self.alpha,
+            alpha=self.alpha,
+            df=df,
             metadata={"n_pairs": n, "df": df},
         )
