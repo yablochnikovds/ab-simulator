@@ -33,18 +33,24 @@ def _list_criteria(_: argparse.Namespace) -> int:
 
 
 def _conf_dir() -> Path:
-    """Return the conf/ directory shipped with the source repo (best-effort)."""
-    # Prefer in-repo conf/ when running from a checkout.
-    here = Path(__file__).resolve()
-    candidate = here.parent.parent.parent / "conf"
-    if candidate.is_dir():
-        return candidate
-    # Fall back to package-included conf/ (we ship a copy via pyproject.toml).
+    """Return the conf/ directory containing Hydra YAMLs.
+
+    Tries in this order:
+
+    1. The installed package's bundled copy at ``absim/_conf/`` (this is what
+       ships in the wheel via the ``force-include`` directive in
+       ``pyproject.toml``).
+    2. The in-repo ``conf/`` directory when running from a source checkout.
+    """
     try:
-        anchor = resources.files("absim").joinpath("../../conf")
-        return Path(str(anchor)).resolve()
+        bundled = resources.files("absim").joinpath("_conf")
+        bundled_path = Path(str(bundled))
+        if bundled_path.is_dir():
+            return bundled_path
     except (FileNotFoundError, ModuleNotFoundError):
-        return candidate
+        pass
+    here = Path(__file__).resolve()
+    return here.parent.parent.parent / "conf"
 
 
 def _list_experiments(_: argparse.Namespace) -> int:

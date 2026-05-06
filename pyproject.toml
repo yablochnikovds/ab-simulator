@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "absim"
-version = "0.2.0"
+version = "0.2.1"
 description = "Monte Carlo validator for A/B test criteria — verify FPR ≈ α and quantify power on synthetic data."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -68,8 +68,26 @@ docs = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/absim"]
 
+[tool.hatch.build.targets.wheel.force-include]
+# Ship the Hydra config tree alongside the package so the `absim run …` CLI
+# works for users who installed via `pip install absim` (no source checkout).
+"conf" = "absim/_conf"
+
 [tool.hatch.build.targets.sdist]
-include = ["src/absim", "README.md", "LICENSE", "CHANGELOG.md"]
+include = [
+    "src/absim",
+    "conf",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "ARCHITECTURE.md",
+    "CONTRIBUTING.md",
+]
+
+# ----------------------------------------------------------------------
+# Pytest filter narrowing — keep "warning is an error" honest
+# (see [tool.pytest.ini_options] block below)
+# ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
 # Ruff
