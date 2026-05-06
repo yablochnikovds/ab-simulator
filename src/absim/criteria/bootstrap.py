@@ -42,16 +42,21 @@ def _resample_means(rng: np.random.Generator, x: FloatArray, n_boot: int) -> Flo
     return out
 
 
+def _bca_z0_a(boot_dist: FloatArray, observed: float, jack: FloatArray) -> tuple[float, float]:
+    """Bias-correction ``z0`` and acceleration ``a_hat`` shared by BCa CI and p-value."""
+    z0 = float(stats.norm.ppf((boot_dist < observed).mean())) if boot_dist.size > 0 else 0.0
+    diff = jack.mean() - jack
+    num = float(np.sum(diff**3))
+    den = 6.0 * float(np.sum(diff**2) ** 1.5)
+    a_hat = num / den if den != 0.0 else 0.0
+    return z0, a_hat
+
+
 def _bca_endpoints(
     boot_dist: FloatArray, observed: float, jack: FloatArray, alpha: float
 ) -> tuple[float, float]:
     """BCa endpoints for a (1 - alpha) two-sided CI."""
-    z0 = float(stats.norm.ppf((boot_dist < observed).mean())) if boot_dist.size > 0 else 0.0
-    jack_mean = jack.mean()
-    diff = jack_mean - jack
-    num = np.sum(diff**3)
-    den = 6.0 * (np.sum(diff**2) ** 1.5)
-    a_hat = float(num / den) if den != 0.0 else 0.0
+    z0, a_hat = _bca_z0_a(boot_dist, observed, jack)
     z_a_lo = float(stats.norm.ppf(alpha / 2.0))
     z_a_hi = float(stats.norm.ppf(1.0 - alpha / 2.0))
 
@@ -66,6 +71,25 @@ def _bca_endpoints(
     lo = float(np.quantile(boot_dist, np.clip(p_lo, 0.0, 1.0)))
     hi = float(np.quantile(boot_dist, np.clip(p_hi, 0.0, 1.0)))
     return lo, hi
+
+
+def _bca_two_sided_pvalue(boot_dist: FloatArray, observed: float, jack: FloatArray) -> float:
+    """BCa-adjusted two-sided p-value (the smallest α at which the BCa CI excludes zero).
+
+    Inverts the BCa endpoint mapping at the value zero. Letting
+    ``F0 = P(boot < 0)`` and ``z_obs = Φ⁻¹(F0)``, the BCa-adjusted percentile
+    associated with zero is ``Φ((z_obs − z0)/(1 + a(z_obs − z0)) − z0)``;
+    the two-sided p-value is twice the smaller tail of that adjusted value.
+    """
+    z0, a_hat = _bca_z0_a(boot_dist, observed, jack)
+    f0 = float(np.clip((boot_dist < 0).mean(), 1e-12, 1.0 - 1e-12))
+    z_obs = float(stats.norm.ppf(f0))
+    inner = 1.0 + a_hat * (z_obs - z0)
+    if inner == 0.0:
+        inner = 1e-12
+    z_adj = (z_obs - z0) / inner - z0
+    p_below = float(stats.norm.cdf(z_adj))
+    return float(min(1.0, 2.0 * min(p_below, 1.0 - p_below)))
 
 
 @register("bootstrap")
@@ -114,18 +138,21 @@ class Bootstrap:
         if self.method == "percentile":
             q_lo, q_hi = np.quantile(boot_diff, [self.alpha / 2.0, 1.0 - self.alpha / 2.0])
             lo, hi = float(q_lo), float(q_hi)
+            # Percentile two-sided ASL: smallest α at which the percentile CI
+            # would exclude zero. Equivalent to ``rejected = lo > 0 or hi < 0``
+            # at α, so p-value and CI rejection always agree.
+            tail = float(min((boot_diff <= 0).mean(), (boot_diff >= 0).mean()))
+            p_value = float(min(1.0, 2.0 * tail))
         else:  # bca
             jack_t = _jackknife_means(treatment)
             jack_c = _jackknife_means(control)
             jack_diff = np.concatenate([jack_t - control.mean(), treatment.mean() - jack_c])
             lo, hi = _bca_endpoints(boot_diff, observed, jack_diff, self.alpha)
+            # BCa-adjusted ASL: inverts the BCa endpoint mapping at zero so
+            # ``rejected = p_value < alpha`` matches ``lo > 0 or hi < 0``
+            # to first order (they coincide except at a measure-zero boundary).
+            p_value = _bca_two_sided_pvalue(boot_diff, observed, jack_diff)
 
-        # P-value via the achieved-significance-level formulation: the
-        # smallest alpha at which the CI excludes zero.
-        # Using the bootstrap distribution's tail mass on the side toward zero.
-        tail = float(np.minimum((boot_diff <= 0).mean(), (boot_diff >= 0).mean()))
-        p_value = float(min(1.0, 2.0 * tail))
-        rejected = lo > 0.0 or hi < 0.0
         return TestResult(
             p_value=p_value,
             statistic=observed / se if se > 0 else 0.0,
@@ -133,7 +160,7 @@ class Bootstrap:
             std_error=se,
             ci_low=lo,
             ci_high=hi,
-            rejected=rejected,
+            rejected=p_value < self.alpha,
             metadata={"method": self.method, "n_resamples": self.n_resamples},
         )
 
