@@ -216,8 +216,10 @@ def main() -> int:
     parser.add_argument(
         "--n-sims",
         type=int,
-        default=2000,
-        help="number of Monte Carlo iterations per (scenario, criterion, effect)",
+        default=1000,
+        help="number of Monte Carlo iterations per (scenario, criterion, effect). "
+        "The shipped docs/benchmark.md was generated with the default 1000; "
+        "raise to 5000 for tighter Wilson bands at the cost of ~5x runtime.",
     )
     args = parser.parse_args()
     scenarios, n_sims = build_scenarios(args.n_sims)
