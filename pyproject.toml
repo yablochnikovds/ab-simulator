@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "absim"
-version = "0.1.0"
+version = "0.2.0"
 description = "Monte Carlo validator for A/B test criteria — verify FPR ≈ α and quantify power on synthetic data."
 readme = "README.md"
 requires-python = ">=3.10"

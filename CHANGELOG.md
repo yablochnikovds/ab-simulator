@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-05-06
+
+Real-data simulation is the headline feature of this release: the simulator
+now drives off your actual production distribution, not just three
+parametric stand-ins.
+
 ### Added
 
 - **`absim.generators.EmpiricalGenerator`** — bootstrap-resamples from real
@@ -15,10 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   strata, and numerator/denominator pairs. Closes the "but I can't run
   absim on my real data" objection: the simulator now drives off your
   actual distribution.
-- `_stats.make_result(...)` and `_stats.degenerate_result(...)` helpers and a
-  `_stats.two_sided_t_pvalue(...)` p-value helper that absorb the
-  `TestResult` boilerplate from every criterion.
-- `generators.base.make_strata(...)` shared helper used by all three
+- New page **Power on real data** walking through three real-world
+  workflows: power analysis on warehouse revenue, calibration audit on
+  in-house statistical code, and CTR-with-CUPED comparison.
+- `absim._stats.make_result(...)` and `absim._stats.degenerate_result(...)`
+  helpers and a `absim._stats.two_sided_t_pvalue(...)` p-value helper that
+  absorb the `TestResult` boilerplate from every criterion.
+- `absim.generators.base.make_strata(...)` shared helper used by all
   parametric generators for equal-frequency stratum binning.
 
 ### Changed
@@ -29,6 +38,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   heuristic ``β = 2·rho`` which produced ``corr ≈ rho/2`` for ``p = 0.1``.
   Saturates gracefully when the request exceeds what a logistic link can
   produce at the given baseline ``p``.
+- `absim._stats.welch_ttest` now returns the Welch–Satterthwaite degrees of
+  freedom as a fifth tuple element so callers stop recomputing it.
+- `Simulator.run()` now passes `batch_size="auto"` to `joblib.Parallel`,
+  amortising per-task IPC overhead on fast criteria.
+
+### Fixed
+
+- `Bootstrap(method="bca")` previously reported a *percentile-style* p-value
+  alongside a BCa CI; rejection now matches the BCa CI exactly via a
+  BCa-adjusted achieved-significance level.
+- `PostStratification` no longer drops small-`n` strata silently from the
+  effect estimate; it falls back to the within-stratum pooled variance
+  (Miratrix–Sekhon–Yu 2013, §3) for the variance contribution.
+- The `__init__.py` doctest example now uses the real public API
+  (`EffectSize`, `Simulator.seed`) instead of nonexistent constructor
+  kwargs.
+- `CUPAC._oof_predict_pooled` silences the actual `RuntimeWarning` numpy
+  emits for degenerate LOO folds (the previous narrowing to
+  `ConvergenceWarning` was incorrect — `RidgeCV` is closed-form and never
+  emits `ConvergenceWarning`).
+- Removed the unused `absim._stats.make_rng` helper.
+
+### Documentation
+
+- README, `docs/index.md`, package docstring and `ARCHITECTURE.md`
+  rewritten around concrete real-data use-cases ("power-analyze a real
+  metric from our warehouse", "is my in-house t-test calibrated?",
+  "delta-method or linearization for our CTR?", "is t-test safe on
+  heavy-tailed revenue?") rather than abstract feature lists.
 
 ### Documentation
 
