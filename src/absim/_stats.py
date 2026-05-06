@@ -32,8 +32,10 @@ def welch_ttest(
     -------
     statistic, p_value, effect, std_error, df
         ``effect = mean(treatment) - mean(control)``, ``std_error`` is the SE
-        of that difference, ``df`` is the Welch–Satterthwaite degrees of freedom
-        (returned even when ``std_error == 0`` so callers can build a CI).
+        of that difference, ``df`` is the Welch–Satterthwaite degrees of freedom.
+        When both arms have zero variance, returns the equal-variance pooled
+        ``df = n_T + n_C - 2`` as a defensible fallback so callers can still
+        build a (degenerate) CI without dividing by zero.
     """
     if treatment.size < 2 or control.size < 2:
         raise ValueError("welch_ttest requires at least 2 observations per group")

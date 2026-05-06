@@ -43,9 +43,11 @@ class EmpiricalGenerator:
     ----------
     outcomes
         1-D array of observed metric values (e.g. per-user revenue, click
-        indicator, watch-time). For ratio metrics, pass the realised
-        per-unit ratio here AND the per-unit ``numerator`` / ``denominator``
-        as separate arrays.
+        indicator, watch-time). For ratio metrics, this argument is used only
+        as a length reference — the actual per-unit ratio is recomputed each
+        iteration from ``numerator`` / ``denominator``. Passing
+        ``numerator / denominator`` here works fine; passing zeros of the
+        right length works too.
     covariate
         Optional 1-D array of pre-experiment covariate values, **paired by
         index** with ``outcomes``. Required for CUPED / CUPAC / paired tests.
