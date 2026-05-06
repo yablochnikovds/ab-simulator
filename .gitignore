@@ -63,4 +63,5 @@ _tail.sh
 _build.log
 _build.err.log
 _build.pid
+_rewrite_history.sh
 .scratch/

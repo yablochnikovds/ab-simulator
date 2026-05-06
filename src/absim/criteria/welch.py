@@ -28,7 +28,6 @@ class WelchTTest:
     ----------
     alpha
         Significance level used to construct the CI and decide rejection.
-        Note that the simulator may also override this when collecting results.
 
     Notes
     -----

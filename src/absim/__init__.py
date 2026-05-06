@@ -9,11 +9,17 @@ The package exposes:
 
 Example
 -------
->>> from absim import Simulator
+>>> from absim import EffectSize, Simulator
 >>> from absim.criteria import WelchTTest
 >>> from absim.generators import ContinuousGenerator
->>> gen = ContinuousGenerator(n_per_group=500, mean_shift=0.1, seed=0)
->>> sim = Simulator(generator=gen, criterion=WelchTTest(), n_sims=200, alpha=0.05)
+>>> gen = ContinuousGenerator(n_per_group=500, rho=0.0)
+>>> sim = Simulator(
+...     generator=gen,
+...     criterion=WelchTTest(),
+...     n_sims=200,
+...     effect=EffectSize(name="small", value=0.2),
+...     seed=0,
+... )
 >>> report = sim.run(parallel=False)
 >>> isinstance(report.power, float)
 True

@@ -1,7 +1,7 @@
 # absim
 
-[![CI](https://github.com/yablochnikov/ab-simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/yablochnikov/ab-simulator/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/yablochnikov/ab-simulator/branch/main/graph/badge.svg)](https://codecov.io/gh/yablochnikov/ab-simulator)
+[![CI](https://github.com/yablochnikovds/ab-simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/yablochnikovds/ab-simulator/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/yablochnikovds/ab-simulator/branch/main/graph/badge.svg)](https://codecov.io/gh/yablochnikovds/ab-simulator)
 [![python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://pypi.org/project/absim/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -25,7 +25,7 @@ uv add absim
 To work on a checkout:
 
 ```bash
-git clone https://github.com/yablochnikov/ab-simulator
+git clone https://github.com/yablochnikovds/ab-simulator
 cd ab-simulator
 uv sync
 ```
