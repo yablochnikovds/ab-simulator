@@ -3,12 +3,12 @@ r"""CUPED — Controlled-experiment Using Pre-Experiment Data.
 Variance reduction via pre-experiment covariate :math:`X`. Define
 
 .. math::
-    \\theta = \\frac{\\mathrm{Cov}(Y, X)}{\\mathrm{Var}(X)},
-    \\quad
-    Y_{\\mathrm{adj}} = Y - \\theta \\bigl(X - \\mathbb E X \\bigr),
+    \theta = \frac{\mathrm{Cov}(Y, X)}{\mathrm{Var}(X)},
+    \quad
+    Y_{\mathrm{adj}} = Y - \theta \bigl(X - \mathbb E X \bigr),
 
-then run Welch's t-test on :math:`Y_{\\mathrm{adj}}`. Variance reduction is
-:math:`1 - \\rho^2` where :math:`\\rho = \\mathrm{Corr}(Y, X)`.
+then run Welch's t-test on :math:`Y_{\mathrm{adj}}`. Variance reduction is
+:math:`1 - \rho^2` where :math:`\rho = \mathrm{Corr}(Y, X)`.
 
 References
 ----------

@@ -3,15 +3,15 @@ r"""Two-sample z-test for proportions (binary metrics).
 Test statistic
 --------------
 .. math::
-    z = \\frac{\\hat p_T - \\hat p_C}
-              {\\sqrt{\\bar p (1 - \\bar p) (1/n_T + 1/n_C)}}
+    z = \frac{\hat p_T - \hat p_C}
+              {\sqrt{\bar p (1 - \bar p) (1/n_T + 1/n_C)}}
 
-where :math:`\\bar p` is the pooled proportion under H₀. The CI uses an
+where :math:`\bar p` is the pooled proportion under H₀. The CI uses an
 unpooled standard error:
 
 .. math::
-    \\mathrm{SE}_{\\text{CI}} = \\sqrt{\\hat p_T (1 - \\hat p_T)/n_T +
-                                       \\hat p_C (1 - \\hat p_C)/n_C}.
+    \mathrm{SE}_{\text{CI}} = \sqrt{\hat p_T (1 - \hat p_T)/n_T +
+                                       \hat p_C (1 - \hat p_C)/n_C}.
 """
 
 from __future__ import annotations

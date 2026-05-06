@@ -1,17 +1,17 @@
 r"""Post-stratification estimator.
 
-Given strata indicators :math:`s_i \\in \\{1, \\ldots, K\\}` for every unit,
+Given strata indicators :math:`s_i \in \{1, \ldots, K\}` for every unit,
 form
 
 .. math::
-    \\hat\\Delta = \\sum_{k=1}^K w_k (\\bar Y^T_k - \\bar Y^C_k)
+    \hat\Delta = \sum_{k=1}^K w_k (\bar Y^T_k - \bar Y^C_k)
 
 where :math:`w_k = n_k / n` is the **pooled-sample** stratum weight. Because
 weights are estimated on the full sample (not per-arm), the variance is
 
 .. math::
-    \\widehat{\\mathrm{Var}}(\\hat\\Delta) = \\sum_k w_k^2
-        \\Bigl(\\frac{s^2_{T,k}}{n_{T,k}} + \\frac{s^2_{C,k}}{n_{C,k}}\\Bigr).
+    \widehat{\mathrm{Var}}(\hat\Delta) = \sum_k w_k^2
+        \Bigl(\frac{s^2_{T,k}}{n_{T,k}} + \frac{s^2_{C,k}}{n_{C,k}}\Bigr).
 
 The resulting test is referred to a Welch–Satterthwaite t-distribution.
 

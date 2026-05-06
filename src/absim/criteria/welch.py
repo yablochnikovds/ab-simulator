@@ -34,13 +34,13 @@ class WelchTTest:
     The test statistic is
 
     .. math::
-        t = \\frac{\\bar{Y}_T - \\bar{Y}_C}
-                  {\\sqrt{s_T^2/n_T + s_C^2/n_C}}
+        t = \frac{\bar{Y}_T - \bar{Y}_C}
+                  {\sqrt{s_T^2/n_T + s_C^2/n_C}}
 
     with Welch–Satterthwaite degrees of freedom
 
     .. math::
-        \\nu = \\frac{(s_T^2/n_T + s_C^2/n_C)^2}
+        \nu = \frac{(s_T^2/n_T + s_C^2/n_C)^2}
                      {(s_T^2/n_T)^2/(n_T-1) + (s_C^2/n_C)^2/(n_C-1)}.
     """
 

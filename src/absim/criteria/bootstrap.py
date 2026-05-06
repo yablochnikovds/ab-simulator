@@ -1,6 +1,6 @@
 r"""Bootstrap criterion — non-parametric percentile and BCa intervals.
 
-For each replicate :math:`b = 1, \\ldots, B`:
+For each replicate :math:`b = 1, \ldots, B`:
 
 1. Resample treatment and control independently *with replacement*.
 2. Compute the difference of resampled means.
@@ -10,8 +10,8 @@ The BCa (bias-corrected and accelerated) CI additionally adjusts for bias and
 skewness, with the acceleration constant estimated by jackknife:
 
 .. math::
-    a = \\frac{\\sum_i (\\bar\\theta_{(\\cdot)} - \\theta_{(i)})^3}
-              {6 \\bigl[\\sum_i (\\bar\\theta_{(\\cdot)} - \\theta_{(i)})^2\\bigr]^{3/2}}.
+    a = \frac{\sum_i (\bar\theta_{(\cdot)} - \theta_{(i)})^3}
+              {6 \bigl[\sum_i (\bar\theta_{(\cdot)} - \theta_{(i)})^2\bigr]^{3/2}}.
 
 References
 ----------

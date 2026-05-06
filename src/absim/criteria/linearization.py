@@ -1,9 +1,9 @@
 r"""Budylin linearization for ratio metrics.
 
-Reduce the ratio :math:`\\bar N / \\bar D` to an *additive* per-unit metric
+Reduce the ratio :math:`\bar N / \bar D` to an *additive* per-unit metric
 
 .. math::
-    L_i = \\frac{N_i}{\\bar D} - \\frac{\\bar N}{\\bar D^2} D_i,
+    L_i = \frac{N_i}{\bar D} - \frac{\bar N}{\bar D^2} D_i,
 
 then run any sample-mean test (here Welch's t-test). To leading order this
 is identical to the delta method, but lets us drop in stratified variance

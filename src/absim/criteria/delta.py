@@ -1,17 +1,17 @@
 r"""Delta-method test for ratio metrics.
 
 For per-unit numerators :math:`N_i` and denominators :math:`D_i`, the metric
-:math:`\\theta = \\bar N / \\bar D` has, by Taylor expansion,
+:math:`\theta = \bar N / \bar D` has, by Taylor expansion,
 
 .. math::
-    \\widehat{\\mathrm{Var}}(\\hat\\theta) \\approx
-        \\frac{1}{\\bar D^2} \\widehat{\\mathrm{Var}}(\\bar N)
-        - \\frac{2 \\bar N}{\\bar D^3}
-            \\widehat{\\mathrm{Cov}}(\\bar N, \\bar D)
-        + \\frac{\\bar N^2}{\\bar D^4}
-            \\widehat{\\mathrm{Var}}(\\bar D).
+    \widehat{\mathrm{Var}}(\hat\theta) \approx
+        \frac{1}{\bar D^2} \widehat{\mathrm{Var}}(\bar N)
+        - \frac{2 \bar N}{\bar D^3}
+            \widehat{\mathrm{Cov}}(\bar N, \bar D)
+        + \frac{\bar N^2}{\bar D^4}
+            \widehat{\mathrm{Var}}(\bar D).
 
-The test statistic for :math:`\\hat\\theta_T - \\hat\\theta_C` is the
+The test statistic for :math:`\hat\theta_T - \hat\theta_C` is the
 difference divided by the square root of the sum of group variances, then
 referenced to a standard normal.
 
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
 
 def _ratio_mean_variance(num: FloatArray, den: FloatArray) -> tuple[float, float]:
-    r"""Return :math:`\\bar N / \\bar D` and the delta-method variance of that ratio."""
+    r"""Return :math:`\bar N / \bar D` and the delta-method variance of that ratio."""
     n = num.size
     if n < 2:
         raise ValueError("delta-method requires at least 2 units")
