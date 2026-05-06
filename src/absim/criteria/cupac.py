@@ -25,7 +25,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol
 
 import numpy as np
-from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import RidgeCV
 from sklearn.model_selection import KFold
 
@@ -69,9 +68,13 @@ def _oof_predict_pooled(
     n_t = X_t.shape[0]
     n = X.shape[0]
     with warnings.catch_warnings():
-        # RidgeCV emits ConvergenceWarning on tiny folds; everything else
-        # should still surface to the caller.
-        warnings.simplefilter("ignore", category=ConvergenceWarning)
+        # RidgeCV's LOO path can emit numpy "invalid value in divide"
+        # RuntimeWarnings on tiny / collinear folds; sklearn occasionally
+        # emits UserWarning for the same reason. Both are harmless here
+        # because the resulting prediction is still finite (we run a
+        # downstream Welch t-test on adjusted Y, which gracefully degrades).
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        warnings.simplefilter("ignore", category=UserWarning)
         if n < n_splits:
             model = regressor_factory()
             model.fit(X, y)

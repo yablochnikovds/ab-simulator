@@ -104,13 +104,6 @@ def split_seed(seed: int | np.random.SeedSequence, n: int) -> list[np.random.See
     return ss.spawn(n)
 
 
-def make_rng(seed: int | np.random.SeedSequence | np.random.Generator) -> np.random.Generator:
-    """Coerce a seed-like input into a fresh :class:`numpy.random.Generator`."""
-    if isinstance(seed, np.random.Generator):
-        return seed
-    return np.random.default_rng(seed)
-
-
 def degenerate_result(effect: float, *, metadata: dict[str, Any] | None = None) -> TestResult:
     """Return a no-signal :class:`TestResult` (SE = 0, p = 1, fail to reject).
 
