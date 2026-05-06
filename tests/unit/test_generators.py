@@ -91,3 +91,15 @@ def test_generators_are_reproducible():
     a = gen.sample(np.random.default_rng(123), 0.0)
     b = gen.sample(np.random.default_rng(123), 0.0)
     np.testing.assert_array_equal(a.treatment, b.treatment)
+
+
+@pytest.mark.parametrize("rho", [0.1, 0.3, 0.5])
+def test_binary_generator_realised_correlation_matches_request(rho):
+    """Numerical calibration must hit ``rho`` within ±0.02 for moderate values."""
+    gen = BinaryGenerator(n_per_group=50_000, p=0.1, rho=rho)
+    rng = np.random.default_rng(0)
+    s = gen.sample(rng, 0.0)
+    realised = float(np.corrcoef(s.control, s.aux["covariate_control"])[0, 1])
+    assert abs(realised - rho) < 0.02, (
+        f"requested rho={rho}, realised={realised:.4f}; calibration regressed"
+    )
