@@ -78,17 +78,25 @@ class PostStratification:
             mask_c = strata_c == k
             n_tk = int(mask_t.sum())
             n_ck = int(mask_c.sum())
-            if n_tk < 2 or n_ck < 2:
-                # Pooled-variance fallback when a stratum is too small to
-                # estimate per-arm variance.
+            if n_tk == 0 or n_ck == 0:
+                # No way to form an arm-difference here — drop the stratum.
                 continue
             w_k = (n_tk + n_ck) / n_total
             mean_t = float(np.mean(treatment[mask_t]))
             mean_c = float(np.mean(control[mask_c]))
-            var_t = float(np.var(treatment[mask_t], ddof=1))
-            var_c = float(np.var(control[mask_c], ddof=1))
-            stratum_var = w_k * w_k * (var_t / n_tk + var_c / n_ck)
             delta += w_k * (mean_t - mean_c)
+            if n_tk >= 2 and n_ck >= 2:
+                var_t = float(np.var(treatment[mask_t], ddof=1))
+                var_c = float(np.var(control[mask_c], ddof=1))
+                stratum_var = w_k * w_k * (var_t / n_tk + var_c / n_ck)
+            else:
+                # Per-arm variance is unavailable for this stratum — fall back
+                # to the within-stratum pooled variance under homoscedasticity
+                # (Miratrix–Sekhon–Yu 2013, §3 footnote). Keeps the delta
+                # contribution unbiased instead of silently zeroing it out.
+                pooled = np.concatenate([treatment[mask_t], control[mask_c]])
+                sigma2_k = float(np.var(pooled, ddof=1))
+                stratum_var = w_k * w_k * sigma2_k * (1.0 / n_tk + 1.0 / n_ck)
             var += stratum_var
             df_num += stratum_var
             df_den += (stratum_var**2) / max(n_tk + n_ck - 2, 1)
