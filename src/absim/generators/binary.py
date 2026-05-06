@@ -8,11 +8,11 @@ also discretised into strata for ``PostStratification``.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from absim.generators.base import Sample
+from absim.generators.base import Sample, make_strata
 
 if TYPE_CHECKING:
     from absim.types import FloatArray
@@ -81,20 +81,7 @@ class BinaryGenerator:
         p_t = float(np.clip(self.p + mean_shift, 1e-6, 1.0 - 1e-6))
         y_t, x_t = self._draw(rng, self.n_per_group, p_t)
         y_c, x_c = self._draw(rng, self.n_per_group, self.p)
-        n_strata = max(1, int(self.n_strata))
-        if n_strata == 1:
-            strata_t: np.ndarray[Any, np.dtype[np.integer[Any]]] = np.zeros(
-                self.n_per_group, dtype=int
-            )
-            strata_c: np.ndarray[Any, np.dtype[np.integer[Any]]] = np.zeros(
-                self.n_per_group, dtype=int
-            )
-        else:
-            edges = np.quantile(np.concatenate([x_t, x_c]), np.linspace(0, 1, n_strata + 1))
-            edges[0] -= 1e-9
-            edges[-1] += 1e-9
-            strata_t = np.digitize(x_t, edges[1:-1])
-            strata_c = np.digitize(x_c, edges[1:-1])
+        strata_t, strata_c = make_strata(x_t, x_c, self.n_strata)
         aux = {
             "covariate_treatment": x_t,
             "covariate_control": x_c,

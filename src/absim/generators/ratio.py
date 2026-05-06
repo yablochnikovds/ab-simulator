@@ -13,11 +13,11 @@ and linearization criteria can consume them directly.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from absim.generators.base import Sample
+from absim.generators.base import Sample, make_strata
 
 if TYPE_CHECKING:
     from absim.types import FloatArray
@@ -83,20 +83,7 @@ class RatioGenerator:
         ratio_t = num_t / np.maximum(den_t, 1.0)
         ratio_c = num_c / np.maximum(den_c, 1.0)
         # Strata bucketed by denominator size — a typical "user activity" stratifier.
-        n_strata = max(1, int(self.n_strata))
-        if n_strata == 1:
-            strata_t: np.ndarray[Any, np.dtype[np.integer[Any]]] = np.zeros(
-                self.n_per_group, dtype=int
-            )
-            strata_c: np.ndarray[Any, np.dtype[np.integer[Any]]] = np.zeros(
-                self.n_per_group, dtype=int
-            )
-        else:
-            edges = np.quantile(np.concatenate([den_t, den_c]), np.linspace(0, 1, n_strata + 1))
-            edges[0] -= 1e-9
-            edges[-1] += 1e-9
-            strata_t = np.digitize(den_t, edges[1:-1])
-            strata_c = np.digitize(den_c, edges[1:-1])
+        strata_t, strata_c = make_strata(den_t.astype(float), den_c.astype(float), self.n_strata)
         aux = {
             "numerator_treatment": num_t,
             "numerator_control": num_c,
