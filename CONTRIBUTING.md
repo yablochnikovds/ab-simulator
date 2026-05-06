@@ -3,7 +3,7 @@
 ## Dev environment
 
 ```bash
-git clone https://github.com/yablochnikov/ab-simulator
+git clone https://github.com/yablochnikovds/ab-simulator
 cd ab-simulator
 uv sync                       # installs all dev + docs deps
 uv run pre-commit install     # set up the local hooks

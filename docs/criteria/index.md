@@ -14,4 +14,4 @@ Pages below give the formula, intuition, assumptions, and references.
 | [Delta-method](delta_method.md)                 | ratio        | Closed-form Taylor variance.                |
 | [Linearization](linearization.md)               | ratio        | Budylin per-unit linearization.             |
 | [Post-stratification](post_stratification.md)   | continuous   | Closed-form weighted mean-difference test.  |
-| [Paired stratification](paired_stratification.md)| paired       | One-sample t-test on within-pair diffs.     |
+| [Paired stratification](paired_stratification.md)| paired       | Paired t-test on within-pair differences.   |

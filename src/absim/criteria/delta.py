@@ -17,9 +17,11 @@ referenced to a standard normal.
 
 References
 ----------
-Hájek, J., Šidák, Z., & Sen, P. K. (1999). *Theory of Rank Tests* (delta
-method exposition). See also Deng et al. (2018) "Applying the Delta Method
-in Metric Analytics." KDD.
+Deng, A., Knoblich, U., & Lu, J. (2018). *Applying the Delta Method in
+Metric Analytics: A Practical Guide with Novel Ideas.* KDD '18. (Applied
+treatment for online controlled experiments.)
+Casella, G. & Berger, R. L. (2002). *Statistical Inference* (2nd ed.),
+§5.5.4. (Textbook derivation of the delta method.)
 """
 
 from __future__ import annotations
