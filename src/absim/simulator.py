@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from joblib import Parallel, delayed
 
-from absim._stats import wilson_ci
+from absim._stats import split_seed, wilson_ci
 from absim.types import EffectSize, SimulationReport
 
 if TYPE_CHECKING:
@@ -85,8 +85,7 @@ class Simulator:
         """Execute the simulation and return an aggregated :class:`SimulationReport`."""
         if self.n_sims <= 0:
             raise ValueError("n_sims must be positive")
-        ss = np.random.SeedSequence(self.seed)
-        child_seeds = ss.spawn(self.n_sims)
+        child_seeds = split_seed(self.seed, self.n_sims)
         start = time.perf_counter()
         results = self._dispatch(child_seeds, parallel=parallel)
         runtime = time.perf_counter() - start
@@ -111,7 +110,7 @@ class Simulator:
             mean_std_error=mean_se,
             runtime_sec=runtime,
             metadata={
-                "generator": getattr(self.generator, "name", type(self.generator).__name__),
+                "generator": self.generator.name,
                 "n_jobs": self.n_jobs if parallel else 1,
             },
         )
@@ -124,7 +123,9 @@ class Simulator:
     ) -> list[TestResult]:
         """Run all iterations either serially or via ``joblib``."""
         if parallel and self.n_jobs not in (0, 1):
-            parallel_runner: Any = Parallel(n_jobs=self.n_jobs, backend="loky")
+            # batch_size="auto" amortises joblib's per-task IPC overhead, which
+            # would otherwise dominate the runtime for fast criteria like Welch.
+            parallel_runner: Any = Parallel(n_jobs=self.n_jobs, backend="loky", batch_size="auto")
             tasks = (
                 delayed(_run_one)(self.generator, self.criterion, s, self.effect.value)
                 for s in child_seeds
